@@ -1,0 +1,17 @@
+{
+  "name": "កម្មវិធីស្រង់ទិន្នន័យស្ថានភាពផ្លូវ",
+  "short_name": "ស្ថានភាពផ្លូវ",
+  "description": "នាយកដ្ឋានអភិវឌ្ឍន៍ហេដ្ឋារចនាសម្ព័ន្ធផ្លូវជនបទ — Road condition inspection app",
+  "lang": "km",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#F2F4F8",
+  "theme_color": "#1F3578",
+  "icons": [
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "icons/icon-512-maskable.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

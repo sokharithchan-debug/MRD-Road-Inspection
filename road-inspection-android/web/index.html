@@ -1,0 +1,2471 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<title>នាយកដ្ឋានអភិវឌ្ឍន៍ហេដ្ឋារចនាសម្ព័ន្ធផ្លូវជនបទ</title>
+
+<!-- iOS "Add to Home Screen" app behavior -->
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="ស្ថានភាពផ្លូវ">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<link rel="icon" type="image/png" href="icons/favicon-32.png">
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#1F3578">
+<!-- Kantumruy Pro is bundled with the app, so Khmer text looks the same with no internet -->
+<script src="vendor/jszip.min.js" defer></script>
+<script src="vendor/jspdf.umd.min.js" defer></script>
+<script src="vendor/pptxgen.bundle.js" defer></script>
+
+<style>
+  @font-face{font-family:"Kantumruy Pro";font-style:normal;font-weight:400;font-display:swap;src:url("fonts/kantumruy-khmer-400.woff2") format("woff2");unicode-range:U+1780-17FF,U+19E0-19FF,U+200C-200D,U+25CC;}
+  @font-face{font-family:"Kantumruy Pro";font-style:normal;font-weight:400;font-display:swap;src:url("fonts/kantumruy-latin-400.woff2") format("woff2");unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212;}
+  @font-face{font-family:"Kantumruy Pro";font-style:normal;font-weight:600;font-display:swap;src:url("fonts/kantumruy-khmer-600.woff2") format("woff2");unicode-range:U+1780-17FF,U+19E0-19FF,U+200C-200D,U+25CC;}
+  @font-face{font-family:"Kantumruy Pro";font-style:normal;font-weight:600;font-display:swap;src:url("fonts/kantumruy-latin-600.woff2") format("woff2");unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212;}
+  @font-face{font-family:"Kantumruy Pro";font-style:normal;font-weight:700;font-display:swap;src:url("fonts/kantumruy-khmer-700.woff2") format("woff2");unicode-range:U+1780-17FF,U+19E0-19FF,U+200C-200D,U+25CC;}
+  @font-face{font-family:"Kantumruy Pro";font-style:normal;font-weight:700;font-display:swap;src:url("fonts/kantumruy-latin-700.woff2") format("woff2");unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212;}
+  :root{
+    /* Ministry of Rural Development palette (taken from the emblem) */
+    --blue:#2E4A9E;
+    --blue-deep:#1F3578;
+    --blue-soft:#E8EDF8;
+    --green:#3E9B3A;
+    --gold:#C9992A;
+    --danger:#D93A32;
+    --paper:#F2F4F8;
+    --surface:#FFFFFF;
+    --surface-2:#F5F7FB;
+    --line:#DCE1EB;
+    --ink:#1B2440;
+    --muted:#5E6882;
+    /* every tappable button is --btn-h tall, on any device */
+    --btn-h:clamp(44px, 6.2vh, 74px);
+    --btn-gap:clamp(6px, 1vh, 14px);
+    --btn-font:clamp(13px, 1.75vh, 19px);
+    --btn-icon:clamp(16px, 2.2vh, 26px);
+    --content-max:900px;
+    --left:#1C84C6;
+    --right:#C0562F;
+    /* legacy names kept so nothing in the script breaks */
+    --asphalt:var(--paper);
+    --cream:var(--ink);
+    --yellow:var(--gold);
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
+  html,body{margin:0; padding:0; height:100%; background:var(--paper); overscroll-behavior:none;}
+  body{
+    font-family:"Kantumruy Pro","Inter","SF Pro Text",-apple-system,system-ui,sans-serif;
+    color:var(--ink);
+    display:flex; flex-direction:column;
+    min-height:100vh;
+    min-height:100dvh;
+    padding-bottom:env(safe-area-inset-bottom);
+  }
+  .mono{ font-family:"JetBrains Mono","SF Mono",ui-monospace,Menlo,monospace; font-variant-numeric:tabular-nums; }
+  button:focus-visible, input:focus-visible, textarea:focus-visible{ outline:3px solid var(--gold); outline-offset:2px; }
+
+  /* --- Ministry header band --- */
+  header{
+    background:linear-gradient(180deg, var(--blue-deep) 0%, var(--blue) 100%);
+    color:#fff;
+    padding:calc(env(safe-area-inset-top) + 14px) 18px 62px;
+    display:flex; align-items:center; gap:12px;
+    border-bottom:4px solid var(--gold);
+  }
+  .header-title{ display:flex; align-items:center; gap:12px; min-width:0; flex:1; }
+  .header-logo{
+    width:54px; height:54px; flex:none; object-fit:contain; display:block;
+    background:#fff; border-radius:50%; padding:7px;
+    box-shadow:0 0 0 2px rgba(255,255,255,.35);
+  }
+  .header-text{ min-width:0; display:flex; flex-direction:column; gap:5px; }
+  .ministry-title{
+    font-size:15px; font-weight:700; color:#fff; line-height:1.45;
+  }
+  header h1{
+    font-size:15px; line-height:1.45; font-weight:700; margin:0; color:#fff;
+    display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden;
+  }
+  .header-meta{ display:flex; flex-direction:column; align-items:flex-start; gap:8px; }
+  .app-subtitle{ font-size:14px; font-weight:600; color:#F3D98E; line-height:1.4; }
+  header .count{
+    align-self:flex-start;
+    font-size:11.5px; color:#fff; white-space:nowrap;
+    background:rgba(255,255,255,.16); padding:2px 9px; border-radius:999px;
+  }
+
+  /* --- Chainage readout (overlaps the header band) --- */
+  .readout{
+    margin:-32px auto 14px; width:calc(100% - 32px); max-width:var(--content-max);
+    background:var(--surface);
+    border:1px solid var(--line);
+    border-radius:18px;
+    padding:18px 20px 30px;
+    text-align:center;
+    position:relative;
+    overflow:hidden;
+    box-shadow:0 6px 18px rgba(31,53,120,.12);
+  }
+  /* surveyor's tape along the bottom edge: minor tick every 10px, major every 50px */
+  .readout::after{
+    content:"";
+    position:absolute; left:0; right:0; bottom:0; height:14px;
+    background:
+      repeating-linear-gradient(90deg, var(--gold) 0 2px, transparent 2px 50px) bottom/100% 14px no-repeat,
+      repeating-linear-gradient(90deg, rgba(201,153,42,.55) 0 1px, transparent 1px 10px) bottom/100% 7px no-repeat;
+    border-top:1px solid var(--line);
+    pointer-events:none;
+  }
+  .distance{
+    font-size:54px; font-weight:700; letter-spacing:-1px;
+    line-height:1; position:relative; color:var(--blue-deep);
+  }
+  .distance .unit{ font-size:16px; color:var(--muted); margin-left:8px; font-weight:600; vertical-align:middle;}
+  .chainage-caption{ font-size:12px; color:var(--muted); margin-top:6px; }
+  .status-row{
+    margin-top:10px; display:inline-flex; align-items:center; justify-content:center; gap:8px;
+    font-size:12.5px; color:var(--muted); position:relative;
+    background:var(--surface-2); border:1px solid var(--line); border-radius:999px; padding:4px 12px;
+  }
+  .dot{ width:9px; height:9px; border-radius:50%; background:#A9B1C3; }
+  .dot.live{ background:var(--green); animation:pulse 1.6s infinite; }
+  @keyframes pulse{
+    0%{ box-shadow:0 0 0 0 rgba(62,155,58,.55);}
+    70%{ box-shadow:0 0 0 8px rgba(62,155,58,0);}
+    100%{ box-shadow:0 0 0 0 rgba(62,155,58,0);}
+  }
+  @media (prefers-reduced-motion: reduce){ .dot.live{ animation:none; } }
+  .gps-warn{ color:var(--danger); }
+
+  /* --- Road lanes --- */
+  .road{
+    flex:0 0 auto;
+    margin:0 auto;
+    width:calc(100% - 24px);
+    max-width:var(--content-max);
+    display:grid;
+    grid-template-columns:1fr 18px 1fr;
+    min-height:auto;
+  }
+  .lane{ display:flex; flex-direction:column; gap:var(--btn-gap); padding:4px; }
+  .lane-label{
+    text-align:center; font-size:13px; font-weight:700;
+    padding:5px 0; border-radius:10px; color:#fff; margin-bottom:2px;
+  }
+  .lane.left .lane-label{ background:var(--left); }
+  .lane.right .lane-label{ background:var(--right); }
+
+  .centerline{
+    display:flex; flex-direction:column; align-items:center;
+    justify-content:flex-start; padding-top:40px; gap:14px;
+  }
+  .centerline span{ width:4px; height:22px; border-radius:2px; background:var(--gold); }
+
+  button.defect{
+    appearance:none; cursor:pointer;
+    background:var(--surface);
+    border:1px solid var(--line);
+    color:var(--ink);
+    border-radius:12px;
+    padding:6px 10px;
+    font-size:var(--btn-font); font-weight:600;
+    font-family:inherit;
+    display:flex; align-items:center; gap:10px;
+    text-align:left;
+    transition:transform .08s ease, background .15s ease;
+    flex:0 0 var(--btn-h); height:var(--btn-h); overflow:hidden;
+    line-height:1.25;
+    box-shadow:0 1px 2px rgba(27,36,64,.06);
+  }
+  .lane.left button.defect{ border-left:5px solid var(--left); }
+  .lane.left button.defect svg{ color:var(--left); }
+  .lane.right button.defect{ border-right:5px solid var(--right); flex-direction:row-reverse; text-align:right;}
+  .lane.right button.defect svg{ margin-left:auto; color:var(--right); }
+  .lane.left button.defect:active{ transform:scale(.96); background:#E3F1FA; }
+  .lane.right button.defect:active{ transform:scale(.96); background:#F8E9E3; }
+  button.defect:disabled{ opacity:.45; box-shadow:none; }
+  button.defect svg{ width:var(--btn-icon); height:var(--btn-icon); flex:none; }
+
+  /* --- Full-width actions (whole road) --- */
+  .wide-actions{ margin:var(--btn-gap) auto 0; display:flex; flex-direction:column; gap:var(--btn-gap); width:100%; max-width:var(--content-max); padding:0 16px; }
+  .wide-actions button.defect{ justify-content:center; }
+  .wide-actions button.defect.structure{ border:1px solid #C6D1EC; border-left:5px solid var(--blue); border-right:5px solid var(--blue); background:#EEF2FA; }
+  .wide-actions button.defect.structure svg{ color:var(--blue); }
+  .wide-actions button.defect.structure:active{ transform:scale(.98); background:#DCE4F5; }
+  .wide-actions button.defect.structure.recording{ background:var(--blue); color:#fff; }
+  .wide-actions button.defect.structure.recording svg{ color:#fff; }
+  .wide-actions button.defect.vegetation{ border:1px solid #BFE0BC; border-left:5px solid var(--green); border-right:5px solid var(--green); background:#F1F9F0; }
+  .wide-actions button.defect.vegetation svg{ color:var(--green); }
+  .wide-actions button.defect.vegetation:active{ transform:scale(.98); background:#DDF0DB; }
+  .wide-actions button.defect.roadMarking{ border:1px solid #E8D39F; border-left:5px solid var(--gold); border-right:5px solid var(--gold); background:#FDF8EC; }
+  .wide-actions button.defect.roadMarking svg{ color:#A87C16; }
+  .wide-actions button.defect.roadMarking:active{ transform:scale(.98); background:#F7EBCB; }
+  .wide-actions .lbl-wrap{ align-items:center; }
+  .wide-actions .range-status{ text-align:center; font-size:12.5px; font-weight:600; display:none; }
+  .wide-actions button.defect.recording .range-status{ display:block; }
+  .wide-actions button.defect.vegetation.recording{ background:var(--green); color:#fff; }
+  .wide-actions button.defect.vegetation.recording svg{ color:#fff; }
+  .wide-actions button.defect.roadMarking.recording{ background:var(--gold); color:#fff; }
+  .wide-actions button.defect.roadMarking.recording svg{ color:#fff; }
+  .wide-actions button.defect.recording{ animation:recPulse 1.4s ease-in-out infinite; }
+  @keyframes recPulse{ 0%,100%{ box-shadow:0 0 0 0 rgba(27,36,64,.25);} 50%{ box-shadow:0 0 0 5px rgba(27,36,64,0);} }
+  @media (prefers-reduced-motion: reduce){ .wide-actions button.defect.recording{ animation:none; } }
+  .lane button.defect .range-status{ display:none; }
+  .lbl-wrap{ display:flex; flex-direction:column; gap:2px; min-width:0; }
+  .lane.right .lbl-wrap{ align-items:flex-end; }
+  .lane button.defect.recording{ color:#fff; }
+  .lane button.defect.recording svg{ color:#fff !important; }
+  .lane button.defect.recording .range-status{ display:block; font-size:11.5px; font-weight:600; opacity:.95; }
+  .lane.left button.defect.recording{ background:var(--left); }
+  .lane.right button.defect.recording{ background:var(--right); }
+  .lane button.defect.recording{ animation:recPulse 1.4s ease-in-out infinite; }
+  @media (prefers-reduced-motion: reduce){ .lane button.defect.recording{ animation:none; } }
+  .mark-len{ font-size:11.5px; color:var(--muted); font-weight:600; }
+
+  /* --- Bottom control dock --- */
+  footer > *{ max-width:var(--content-max); margin-left:auto; margin-right:auto; }
+  footer{
+    margin-top:auto;
+    padding:14px 16px 16px;
+    background:var(--surface);
+    border-top:1px solid var(--line);
+    border-radius:20px 20px 0 0;
+    box-shadow:0 -6px 18px rgba(31,53,120,.08);
+  }
+  .btn{
+    width:100%; height:var(--btn-h); padding:0 16px; border-radius:14px; border:none;
+    font-size:var(--btn-font); font-weight:700; font-family:inherit; cursor:pointer;
+  }
+  #toggleBtn{ font-size:calc(var(--btn-font) + 2px); }
+  .btn-start{ background:var(--green); color:#fff; }
+  .btn-end{ background:var(--danger); color:#fff; }
+  .btn:active{ transform:scale(.985); }
+  .btn-capture{
+    background:var(--blue-soft); color:var(--blue-deep);
+    border:1px solid #CCD6EE;
+    display:flex; align-items:center; justify-content:center; gap:8px;
+    margin-bottom:var(--btn-gap);
+  }
+  .btn-capture svg{ width:var(--btn-icon); height:var(--btn-icon); }
+  .btn-capture:disabled{ opacity:.45; }
+  .btn-row{ display:flex; gap:10px; }
+
+  .setup-row{ display:flex; gap:10px; align-items:stretch; margin-bottom:10px; }
+  .setup-field{
+    flex:1; display:flex; flex-direction:column; gap:2px;
+    background:var(--surface-2); border:1px solid var(--line);
+    border-radius:14px; padding:8px 14px;
+  }
+  .setup-field label{ font-size:11.5px; font-weight:600; color:var(--muted); }
+  .setup-field input{
+    background:transparent; border:none; outline:none;
+    color:var(--blue-deep); font-size:18px; font-weight:700;
+    font-family:"JetBrains Mono","SF Mono",ui-monospace,Menlo,monospace;
+    padding:0; width:100%;
+  }
+  .dir-toggle{
+    flex:1; appearance:none; cursor:pointer;
+    background:var(--surface-2); border:1px solid var(--line);
+    border-radius:14px; color:var(--blue-deep);
+    font-size:14.5px; font-weight:700; font-family:inherit;
+  }
+  .dir-toggle.reverse{ background:#F8E9E3; border-color:var(--right); color:var(--right); }
+  .setup-row.hidden{ display:none; }
+  .road-field input{ font-family:inherit !important; font-size:17px; }
+  .road-field.invalid{ border-color:var(--danger); background:#FCEBEA; }
+  .road-name{ font-size:16px; font-weight:700; color:var(--blue-deep); margin-bottom:6px; line-height:1.4; }
+  .road-name:empty{ display:none; }
+  .btn-row{ gap:var(--btn-gap); }
+  .btn-row .btn-capture{ flex:1; padding:0 6px; font-size:calc(var(--btn-font) - 2px); line-height:1.2; gap:6px; }
+  .btn-row .btn-capture svg{ width:calc(var(--btn-icon) - 2px); height:calc(var(--btn-icon) - 2px); }
+  .btn-row .btn-capture span{ display:block; }
+  .btn-row .btn-undo{
+    flex:0 0 clamp(62px, 9vw, 110px); flex-direction:column; gap:1px; padding:2px 4px;
+    font-size:calc(var(--btn-font) - 3.5px);
+    background:#FDF6E6; color:#8A6410; border:1px solid #EBD39A;
+  }
+  .btn-row .btn-undo:active{ background:#F8E8C2; }
+
+  /* --- Toast --- */
+  .toast{
+    position:fixed; top:calc(env(safe-area-inset-top) + 10px); left:50%;
+    transform:translateX(-50%) translateY(-12px);
+    background:var(--ink); color:#fff; font-size:13.5px; font-weight:600;
+    padding:10px 16px; border-radius:999px;
+    opacity:0; transition:opacity .25s, transform .25s;
+    pointer-events:none; z-index:50; white-space:nowrap;
+    box-shadow:0 6px 18px rgba(0,0,0,.2);
+  }
+  .toast.show{ opacity:1; transform:translateX(-50%) translateY(0); }
+
+  /* --- Bottom sheets --- */
+  .sheet-backdrop{
+    position:fixed; inset:0; background:rgba(15,24,52,.45);
+    display:none; align-items:flex-end; justify-content:center; z-index:60;
+  }
+  .sheet-backdrop.show{ display:flex; }
+  .sheet{
+    background:var(--surface); width:100%; max-width:520px;
+    border-radius:20px 20px 0 0; padding:20px 18px calc(20px + env(safe-area-inset-bottom));
+    border-top:4px solid var(--blue);
+  }
+  .sheet h3{ margin:0 0 4px; font-size:17px; color:var(--blue-deep); }
+  .sheet p{ margin:0 0 14px; color:var(--muted); font-size:13px; }
+  .sheet textarea, .sheet-number{
+    width:100%; background:var(--surface-2); border:1px solid var(--line);
+    border-radius:12px; color:var(--ink); font-family:inherit;
+  }
+  .sheet textarea{ font-size:15px; padding:12px; resize:none; min-height:70px; }
+  .sheet-number{ font-size:17px; padding:14px; }
+  .sheet-number::placeholder{ color:var(--muted); font-size:14px; }
+  .sheet-actions{ display:flex; gap:10px; margin-top:14px; }
+  .sheet-actions button{ flex:1; padding:13px; border-radius:12px; border:none; font-weight:700; font-family:inherit; font-size:15px; cursor:pointer;}
+  .sheet-cancel{ background:var(--surface-2); color:var(--ink); border:1px solid var(--line) !important; }
+  .sheet-add{ background:var(--blue); color:#fff; }
+
+  /* --- Summary screen --- */
+  #summary{ display:none; flex:1; flex-direction:column; overflow:hidden; }
+  #summary.show{ display:flex; }
+  #main{ display:flex; flex-direction:column; flex:1; min-height:auto; }
+  #main.hidden{ display:none; }
+
+  .sumScroll{ flex:1; overflow-y:auto; padding:14px 14px 16px; -webkit-overflow-scrolling:touch; }
+  .card{
+    background:var(--surface); border:1px solid var(--line); border-radius:16px;
+    padding:16px; margin-bottom:12px; box-shadow:0 1px 3px rgba(27,36,64,.05);
+  }
+  .card h2{
+    margin:0 0 10px; font-size:15px; color:var(--blue-deep);
+    padding-left:10px; border-left:4px solid var(--gold);
+  }
+  .stat-row{ display:flex; justify-content:space-between; padding:8px 0; font-size:15px; border-bottom:1px dashed var(--line); }
+  .stat-row:last-child{ border-bottom:none; }
+  .stat-row span:first-child{ color:var(--muted); }
+  .stat-row span:last-child{ font-weight:700; }
+  .type-row{ display:flex; align-items:center; gap:10px; padding:8px 0; font-size:14.5px; border-bottom:1px solid var(--line); }
+  .type-row:last-child{ border-bottom:none; }
+  .type-row svg{ width:18px; height:18px; color:var(--blue); }
+  .type-row .cnt{ margin-left:auto; font-weight:700; color:var(--blue-deep); background:var(--blue-soft); border-radius:999px; padding:1px 10px; }
+
+  #typeChartImg{ width:100%; display:block; border-radius:10px; background:#fff; border:1px solid var(--line); }
+
+  .route-strip-wrap{ overflow-x:auto; -webkit-overflow-scrolling:touch; border-radius:10px; background:#fff; border:1px solid var(--line); }
+  .route-strip-wrap img{ display:block; height:auto; }
+  #routeStripImg{ min-width:600px; width:auto; max-width:none; }
+  .route-strip-stats{ margin-top:10px; font-size:12px; color:var(--muted); display:flex; flex-wrap:wrap; gap:10px; }
+  .route-strip-stats b{ color:var(--ink); }
+
+  .mark-row{ padding:10px 0; border-bottom:1px solid var(--line); }
+  .mark-row:last-child{ border-bottom:none; }
+  .mark-top{ display:flex; align-items:center; gap:8px; font-size:14px; font-weight:600; }
+  .mark-top svg{ width:16px; height:16px; color:var(--blue); }
+  .side-pill{ font-size:11px; padding:2px 8px; border-radius:999px; font-weight:700; color:#fff; }
+  .side-pill.left{ background:var(--left); }
+  .side-pill.right{ background:var(--right); }
+  .side-pill.both{ background:var(--muted); }
+  .mark-dist{ margin-left:auto; font-size:13px; color:var(--blue-deep); font-weight:700; }
+  .mark-note{ margin-top:3px; font-size:12.5px; color:var(--muted); padding-left:24px; }
+  .empty{ color:var(--muted); font-size:13.5px; text-align:center; padding:18px 0; }
+
+  .sum-header{
+    background:linear-gradient(180deg, var(--blue-deep) 0%, var(--blue) 100%);
+    border-bottom:4px solid var(--gold);
+    padding:calc(env(safe-area-inset-top) + 12px) 18px 14px;
+    display:flex; align-items:center; gap:12px;
+  }
+  .sum-header .header-logo{ width:42px; height:42px; }
+  .sum-head-text{ flex:1; min-width:0; }
+  .sum-header h1{ font-size:17px; margin:0; color:#fff; line-height:1.4; }
+  .sum-header h1 small{ display:block; font-size:14px; font-weight:600; color:#F3D98E; }
+  .sum-header .ministry-title{ font-size:17px; margin-bottom:1px; }
+  .back{
+    background:rgba(255,255,255,.16); border:none; color:#fff; font-size:14px; font-weight:700;
+    cursor:pointer; font-family:inherit; padding:7px 12px; border-radius:999px;
+  }
+  .sum-footer{
+    display:flex; flex-direction:column; gap:8px; padding:12px 14px 16px;
+    background:var(--surface); border-top:1px solid var(--line);
+    box-shadow:0 -6px 18px rgba(31,53,120,.08);
+  }
+  .sum-footer-row{ display:flex; gap:8px; }
+  .sum-footer-row button{ flex:1; padding:13px 6px; border-radius:12px; border:none; font-weight:700; font-family:inherit; cursor:pointer; font-size:13.5px; }
+  .export-btn{ background:var(--blue-soft); color:var(--blue-deep); border:1px solid #CCD6EE !important; }
+  .new-btn{ background:var(--green); color:#fff; font-size:15px !important; }
+
+  .photo-grid{ display:grid; grid-template-columns:repeat(3, 1fr); gap:8px; }
+  .photo-item{ cursor:pointer; }
+  .photo-item img{ width:100%; aspect-ratio:1; object-fit:cover; border-radius:10px; border:1px solid var(--line); display:block; }
+  .photo-item span{ display:block; text-align:center; font-size:11px; color:var(--muted); margin-top:4px; }
+
+  .lightbox{
+    position:fixed; inset:0; background:rgba(10,16,36,.94); z-index:80;
+    display:none; align-items:center; justify-content:center; flex-direction:column;
+    padding:env(safe-area-inset-top) 16px env(safe-area-inset-bottom);
+  }
+  .lightbox.show{ display:flex; }
+  .lightbox img{ max-width:100%; max-height:78vh; border-radius:12px; }
+  .lightbox .lb-caption{ color:#fff; margin-top:14px; font-size:13px; text-align:center; }
+  .lightbox .lb-close{
+    position:absolute; top:calc(env(safe-area-inset-top) + 14px); right:18px;
+    background:rgba(255,255,255,.16); border:none; color:#fff;
+    width:40px; height:40px; border-radius:50%; font-size:18px; cursor:pointer;
+  }
+
+  .gps-banner{
+    margin:0 16px 10px; padding:10px 14px; border-radius:12px;
+    background:#FCEBEA; border:1px solid #F2C2BF;
+    color:#A8261F; font-size:12.5px; display:none;
+  }
+  .gps-banner.show{ display:block; }
+
+
+  /* --- Survey mode: everything fits on one screen, no scrolling --- */
+  /* --app-h is measured in JS: iOS standalone can report a shorter dvh than the real screen */
+  body.surveying{
+    --btn-h:clamp(38px, 5.6vh, 70px);
+    --btn-gap:clamp(5px, 0.85vh, 12px);
+    --btn-font:clamp(12px, 1.6vh, 18px);
+    --btn-icon:clamp(15px, 2vh, 24px);
+    height:var(--app-h, 100dvh);
+    overflow:hidden;
+    /* the footer already pads itself for the home indicator — no second inset here,
+       or a grey strip appears under the footer */
+    padding-bottom:0;
+  }
+  /* the page behind everything is footer-white, so any strip iOS leaves at the
+     bottom blends into the footer instead of showing as a grey band */
+  body.surveying{ background:var(--surface); }
+  body.surveying #main{ background:var(--paper); }
+  /* paints the home-indicator strip the same white as the footer, whatever iOS reports */
+  body.surveying::after{
+    content:''; position:fixed; left:0; right:0; bottom:0;
+    height:env(safe-area-inset-bottom, 0px);
+    background:var(--surface); pointer-events:none; z-index:1;
+  }
+  body.surveying #main{ height:100%; min-height:0; overflow:hidden; }
+  body.surveying header{ padding:calc(env(safe-area-inset-top) + 8px) 14px 34px; gap:10px; border-bottom-width:3px; }
+  body.surveying .header-logo{ width:40px; height:40px; padding:5px; }
+  body.surveying header h1{ font-size:13px; -webkit-line-clamp:2; }
+  body.surveying .app-subtitle{ display:none; }
+  body.surveying .header-meta{ gap:4px; }
+  body.surveying header .count{ font-size:11px; padding:1px 8px; }
+  body.surveying .readout{ margin:-26px 12px 8px; padding:12px 14px 20px; border-radius:16px; }
+  body.surveying .readout::after{ height:9px; background-size:100% 9px, 100% 5px; }
+  body.surveying .road-name{ font-size:13.5px; margin-bottom:2px; }
+  body.surveying .distance{ font-size:38px; }
+  body.surveying .distance .unit{ font-size:13px; }
+  body.surveying .chainage-caption{ display:none; }
+  body.surveying .status-row{ margin-top:6px; font-size:11.5px; padding:2px 10px; }
+  body.surveying .road{ min-height:0; }
+  body.surveying .lane-label{ font-size:12px; padding:3px 0; margin-bottom:0; }
+  body.surveying .centerline{ padding-top:30px; gap:10px; }
+  body.surveying .centerline span{ height:16px; }
+  body.surveying footer{ margin-top:auto; padding:10px 12px calc(10px + env(safe-area-inset-bottom)); border-radius:16px 16px 0 0; }
+  body.surveying .btn-row .btn-capture svg{ width:16px; height:16px; }
+  body.surveying .ministry-title{ font-size:13px; }
+  body.surveying .gps-banner{ margin:0 12px 6px; padding:7px 12px; font-size:11.5px; }
+  body.surveying .lane{ min-height:0; overflow:hidden; }
+  /* Shorter phones (iPhone SE and similar): shrink everything one more step */
+  @media (max-height: 740px){
+    body.surveying header{ padding:calc(env(safe-area-inset-top) + 6px) 12px 30px; }
+    body.surveying .header-logo{ width:34px; height:34px; padding:4px; }
+    body.surveying header h1{ font-size:12px; }
+    body.surveying header .count{ font-size:10.5px; }
+    body.surveying .readout{ margin:-24px 10px 6px; padding:9px 12px 16px; }
+    body.surveying .readout::after{ height:7px; background-size:100% 7px, 100% 4px; }
+    body.surveying .road-name{ font-size:12px; }
+    body.surveying .distance{ font-size:30px; }
+    body.surveying .status-row{ font-size:10.5px; margin-top:4px; }
+    body.surveying .lane-label{ font-size:11px; }
+    body.surveying footer{ margin-top:auto; padding:8px 10px calc(8px + env(safe-area-inset-bottom)); }
+    body.surveying .ministry-title{ font-size:12px; }
+  }
+
+  /* Narrow phones: a touch smaller so two-line Khmer labels never clip */
+  @media (max-width: 400px){
+    body.surveying{ --btn-font:clamp(10.5px, 1.42vh, 15px); }
+    body.surveying .lane button.defect{ padding:4px 7px; gap:7px; }
+  }
+  @media (max-width: 340px){
+    body.surveying{ --btn-font:9.5px; --btn-icon:13px; }
+  }
+  /* Tablets: bigger buttons, and the spare height is shared out evenly */
+  @media (min-width: 700px){
+    :root{
+      --btn-h:clamp(54px, 6.4vh, 96px);
+      --btn-gap:clamp(10px, 1.4vh, 22px);
+      --btn-font:clamp(16px, 1.9vh, 22px);
+      --btn-icon:clamp(20px, 2.4vh, 30px);
+    }
+    body.surveying{
+      --btn-h:clamp(52px, 6vh, 92px);
+      --btn-gap:clamp(9px, 1.3vh, 20px);
+      --btn-font:clamp(15px, 1.8vh, 21px);
+      --btn-icon:clamp(19px, 2.3vh, 28px);
+    }
+    body.surveying .wide-actions{ margin-top:auto; margin-bottom:auto; }
+  }
+</style>
+</head>
+<body>
+
+<!-- MAIN SCREEN -->
+<div id="main">
+  <header>
+    <div class="header-title">
+      <img src="data:image/png;base64,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" alt="ក្រសួងអភិវឌ្ឍន៍ជនបទ" class="header-logo">
+      <div class="header-text">
+        <div class="ministry-title">ក្រសួងអភិវឌ្ឍន៍ជនបទ</div>
+        <h1>នាយកដ្ឋានអភិវឌ្ឍន៍ហេដ្ឋារចនាសម្ព័ន្ធផ្លូវជនបទ</h1>
+        <div class="header-meta">
+          <span class="count" id="markCount">0 marks · 0 photos</span>
+          <span class="app-subtitle">កម្មវិធីស្រង់ទិន្នន័យស្ថានភាពផ្លូវ</span>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <div class="readout">
+    <div class="road-name" id="roadNameDisplay"></div>
+    <div class="distance"><span id="distanceVal" class="mono">0+000</span></div>
+    <div class="chainage-caption">គីឡូម៉ែត្រ (km + m)</div>
+    <div class="status-row">
+      <span class="dot" id="statusDot"></span>
+      <span id="statusText">Not tracking</span>
+    </div>
+  </div>
+
+  <div class="gps-banner" id="gpsBanner">Location unavailable. Allow location access, and make sure this page is opened over HTTPS.</div>
+
+  <div class="road">
+    <div class="lane left">
+      <div class="lane-label">ឆ្វេងដៃ</div>
+    </div>
+    <div class="centerline">
+      <span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span>
+    </div>
+    <div class="lane right">
+      <div class="lane-label">ស្តាំដៃ</div>
+    </div>
+  </div>
+
+  <div class="wide-actions" id="wideActions"></div>
+
+  <footer>
+    <div class="btn-row">
+      <button class="btn btn-capture" id="captureBtn" disabled>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+        <span>ថតរូបភាព</span>
+      </button>
+      <button class="btn btn-capture" id="bridgeBtn" disabled>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 18v-4c3-3 6-4.5 10-4.5s7 1.5 10 4.5v4"/><line x1="5" y1="14" x2="5" y2="18"/><line x1="12" y1="12.5" x2="12" y2="18"/><line x1="19" y1="14" x2="19" y2="18"/><line x1="2" y1="18" x2="22" y2="18"/></svg>
+        <span>កំណត់ទីតាំងស្ពាន</span>
+      </button>
+      <button class="btn btn-capture btn-undo" id="undoBtn" disabled aria-label="លុបចំណុចចុងក្រោយ">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 14 4 9 9 4"/><path d="M20 20v-7a4 4 0 0 0-4-4H4"/></svg>
+        <span>លុបចុងក្រោយ</span>
+      </button>
+    </div>
+    <input type="file" accept="image/*" capture="environment" id="cameraInput" style="display:none">
+    <div class="setup-row" id="roadRow">
+      <div class="setup-field road-field">
+        <label for="roadNameInput">ឈ្មោះផ្លូវ</label>
+        <input type="text" id="roadNameInput" placeholder="ឧ. ផ្លូវលេខ ..." autocomplete="off" enterkeyhint="done">
+      </div>
+    </div>
+    <div class="setup-row" id="setupRow">
+      <div class="setup-field">
+        <label for="startChainageInput">ចំណុចចាប់ផ្តើម</label>
+        <input type="text" id="startChainageInput" inputmode="numeric" placeholder="0+000">
+      </div>
+      <button class="dir-toggle" id="dirToggle" type="button">ទិសផ្ទាល់ ↑</button>
+    </div>
+    <button class="btn btn-start" id="toggleBtn">ចាប់ផ្តើម</button>
+  </footer>
+</div>
+
+<!-- SUMMARY SCREEN -->
+<div id="summary">
+  <div class="sum-header">
+    <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAMgAAADcCAMAAAACwR4hAAABgFBMVEX//////v////7+///+/v/+/v7+/v39/v7+/f39/f79/f3+/P3+/fz9/fz9/Pz9+/z9/Pn8/f38/Pz8+/z6/P77/Pr5+Pr39fP247b6ygH1xQL2xQD1xQD0xQD0wwTx7/Ln6+7i4ujj3t3c1djZzNPexcLqvj3Fyc3AvLyPupVStkdSskdSskZSskVRuEfdpWzXoynXoiOxqKXKnDPWkIvff6TKmCXFkx+0kVCvgzmyhRuaoqeVlo9RsEVom3qXg19uhYdAmdZBltFAltJAltE/ltFCnKY9ks7deqrbeqnbeanbeajheofaeafbc5O4Zl20YE6zYFCzYE6zYE2Zdy2cazl+cFqFZyLAWEvTOTndNjHZNjPjMyzXLCmPWj+GTEBvWChuRkaMPlRsOytlMiRWcWotbTwobTkoaTcmbDcmaTcmaTYmaTVGYmEqYjgjajQeZS8cXiwWXCc6TZI3SpE2SZA1SZA6SoUsSpYxS4YiVC4WVSVDRoBcLR8rRH4nPX273N+cAAA5NUlEQVR42u19jV8ax9b/CK4giSYQWaJtXJZlyz5pm6uUyg2sD6tpmqSX1BgRfIkC8qLeBBRREiHov/47Z2Z32QW0SfuYpp/Pb+6tEYRlvnPevufMmYWQ/z8+ZXAe++OJfy6U21zvd88/Vh4OMQI/e+KYUvzcPxGIj2QLUcFAwhEp1VXI5D8PxwSJ5DKJrMRRJGMkmonn1oMO7p+nWEJqoTCXUHUhCOvziVxcHf3HGfwkiSbmcol4CoSBiiVm5nKZuUyQ/NNEAjYB887Mp3jmsSKZuUI8npoa+2fMfgKGvuQOV2ohkZvLiCgDH8gHFS0Kv9ExNumZ+If4Y5z7XGEhE8EAMkHUeCY3b2rW161fDiJEIhGFZ56JI8HMfC7BhOBwpuapwbh1HCElEpFGv16H201kcqqLeabbJBXPZOIqPM+h0yosJBTGUjxE3M0kcsXxrxQIWHQuN2cago8oiYXcQmp0DP4Sgigyvy4weYwJ2fjcQi7Lf7VWoSQyhYW5jMKQOFAMcZg9N4F/YcJBybnUxFy8EH/8NQOZy+Tm5jMSZYho4bkEui00/Fyc2T3zAoDj6w0qk0TJzCGShWzQMcaCRyKHhgGQEqBkUw7jVYhjIff1AfFM0pgwxquZeUQCgQ8JvINPgUjAZBxTqQT+MonopMw84kABURwTk18JHI6SqTE2m2hmYQ4snlEspCk5+mswA0MkLqBgwSzFAXSS+mIPSmnsK2FgfESVYGU56oHX44gkg64LVz+TQVoiZXKJlGsMzH4qFV9AHCkBLd8zBllKVHJ+DfLgxGgqk8ioIk1lJ4mYTVAkaNlj46BSmaADzAJtxQd/VhM/FcAlqFPwZ+42IRF8c0oJfAWuSu2Cic8BlCBC8REhhUjm10XimUAE4MNINJdBH8VoS2Ie5OXgwCmTcCoTnwOz74b+drt3Q6zLFHLxufnEepQnDo+HTKlA2cFJ8WMeMI5cTiEklcuoQBTBjS0AjnUFknmwIVFFGIlcIZMa//tZ8ZgrNb8AUBIAJatMkTGfA0x+PgNZlHMS/G4uFyU8AIkQPxHXwT7iYOY+nw6DvZM5tK8hg5pbwHUFKClY/gk/mPw85LmAAFmLSoK5XErgxsAbF+KJVBCeJkJ0PTG/kENZzn0doZHjgrsJnE0coCzMZ1IRgmufjYNZQCwEYWQnwgUQy11gJoBDnXLcJjzCQOwLsAbxjPpVlLyAk6Pfis9TPYnDtMC6STCVoHY+Fs3tkkghJ43RoAJmfhs8biqx8Bh1CmSYWE8pAvdVxESYxJSkY4FVTsSpL+ZVQAJqJJXL0VQ3S6gLBhkRZyQFLynkFgBFZl1Vgl8RQ/FheBYVigX0HiJDNIhRHkwDngTJZNYViImZFMhKgldRJYTwoUYEmvb+vfKY9Hk8pkpwk+g/g4q6ngDlyuUy6ItBBt0MPsjlco8LBZQPuCp4lFigKHgr0+I4zjPh+/J5POcw3O/tiUnfBEDy+CiWiJpKJBI5FAYRCzBrsGewnlyioE6BqwJYCUARlaYQxQRO3+ebnLjtMNPML50NEkWJSKIwZcnZJ/z8XUa9UJ9yhVT0cS4zt4ADOHEmooBUcpnHDMUY7/eZ0yfExQfFMNAug31+sfQ8qIIlgO6nUqoaVSJhgGShfnw4mgIkXUxO2JjLZQrdAphJVLS8zsULOP2omkqlkCCDcTm/bNkeSS44z/mFhXgcNIlBSiEkkBJPxRRUAEvCALIQz+WKzCzIFK5+xDL9BBjWwvw8XhHj5ReTCcdHM/Gf9JU2xvz8fBxBZR4/ZlIKC5FMbqE3chklGIooOP3Hjx/Tycfn6ezZ0K+XyEa+VFThOD5bQHXP6T/wJwy0ixyuMHtIn7cBKeR6L6XeTH+l9TqFXDf5xSyeIzzWc1Ct4lQKCfrDGBkDDEwsbgGSKxgYMpZXJ/QL4KASiZIvx4THSTAbt+jUPMOkw0DdAnOJKsndTMY0doAG+hZV0TAeP9axsNnPWzQMMmPPF/W+wWxv9dHO0Syi6JElMSiAX5oSFTVbwjKXjqSQ6OZS0UgQ/yYERSkcURAW4kpZpKQ6J0a/bBwR0aCxggsT56dctr9ChE8x3Qe+yyy5kMgWULnA/0YE24tdUzwCi0TQDUedX3pPq+/jHGMTPiMcRlO6FaciyUICIznQx8e5lIRxHY3ksaqI4KEddyEmTow5+irhX74KNDE5OTmBfIsDR+ZDT+MEfQJOmKAmnQoLUWBYDFMGfklFBKSQyLUShmAckx6O8SwgWnC5vzUv4TyTDj2aA/3FNAQmCklJBEsoGbCCf6dUyEBg/qrgQoqMnhdcA1B4EVXy9ldRoeMmbuuiWM8kFpD4ApZUUoR8JJMo0ARkCiM9TU/owwj8AfMReLXJ5Jlg/m5RCBGWVQHFhTwDYCgwN2UdQGFZ1DcBr7ntc0CiC8ASKRHLDuuAAiw/MY+5VYpaDBnzuf8eFD4UhUsXBc0Nc1jRTUVgViLksqA+65KxZ0g43GlfKGTiGUhUSDAKL6CFoPjcPBNMkPLnLywYSIF6okhAMHucY/WgdZqvT0XX47D6ceB/PitjVrBKtJBIhdGilBStBlEscwsoGJajjE1+qYA4NomigICXWqdpOpZPchkIfIlsVMQeBymVmM8UaHnXYy9KRtbnHxfi8xlVQBoSBmOZn6P5JHBPi2DIl7AYDxMFetk4Ul9jHqBTCujMXQLMeOGnAhbkp/rJhg+rRD8VMshwIYroxkJrjbmEjsVIHm86vxojLilqiMLUDCwkoGn4Hehz5xJYpk4OmcsEVonmcoW5eawUT/qwTseqvwYWi2BulKl4iGKIovfhC8w0HBATBRX3RwoL87no0DX1EB6QZABoYh08sX+SYJELNcxcFHplEIx4k/mVh0hYS1iwqMMcuFus/Yx5YH2VLGSEoFbzOeWKnMLjwBI3fQ3O1UEdOBqLqaZxen3IFPnbN4YE95VpUmgYBigCM40JDtxrEMWBamV1u4PXwBI3Sm0OEvQpMsl5wO7F6Dotu8JzupR7fUU3sxeSoDrA1s00DaAYk8SprMMfM3Q3SrwSB6F71TpgWHYJhEI84AaRhkFMXehprL4JfCOKFcHtZ1qzpZ+4roYwiI2iKxNT6IFpwwC43cnr6/cRWIg4eK85Gh4nOERHpiLUWBYM68P+ghtRLs4Rwlw1wYzENA3qjKaidMsGVhlUgv+jlfQRCRPMHC3/YvXeg2QajEWixoLKi2LPpaZuRCQcETW2D2AxDRZZMASiWqFCqC7HH+bck9QNM+BxDI/UrqmxJNcZlPl4rqjyIzdlJYLCmLphGgQ3NPkkNRnwRHO4O/gpocxDdxqpetECEGHK6JnQjSWeWVfDN8kTsegeTeGugWPCKNVCCJxnxruwkFE+sZSDO43wBqpeoEcQHhl+3VgogXbc4HYcLbo7ddOgvpT63AWqVj/F1yOf7DK5MWc0Q9+IeCA8OvUloMaCS3TT3BE+yOj2m8C0A+eBagX2n73O7Q4JKMCGF3T10sOjLq6xsYkvSOfdY7jbgeJIsFUF1v5ZKfcE7lYvMPVaQE88Rf6OpHeCuCDtQAdDi1eAg//cAAZuGK+g2xcNj1+8g97wuSwIYqVTnXJ89iQor5/T1WvBDI9fboxOYNpBxaGvJm3K+PwLsYBiqBcIBT3xlysJeXSfS9UqTnEon7CSnHtSH5yV16sJpp/0nwWaPX4ZoXA07aDioNwKP73P7Tpwyh7rfDjPpLVG0kPNOZwq0yuqXiAUTFQmv4iRk0iWbkTpajXA2t29adBSpEcHwYdkrFqrUTloMWrG65FfgXrNM6GAJ77prQUzBJpqBQxDtKo1B5P2h2RFkURLFymWIfOlrj5KqpUgU16/YKoXrkzUdcNC4VjasbBgeKuF/mKJBxM+OuVyqZhNRWVJkgBEsQzTz6+s/A5jZaXYzcsW8JN0S7KnXixRuVEcDpZ2mGq10F8sQTZY7pb2VlZW9vJFUwT4zO8vnxvj5Uq5bO1s8pEQ3QKb070X88TczXUIcvqWm6FW8K99Q8NNpHw3b0z5xUtY/b29vVUG4sVLY7x4/nupa0fC3LCpXjeb6npIOGNVq4V+1u4moVJ5xZzyb6YI6DP/McfLl4CkLFtEyXj9Qk+9FuZZm/AN5ezRBAuC9LN+oqzdafUEfLa78vw/L3sTNmXwH/sAJOW8YFkEjvH6nnrNZ8Qb4ytjrlTcolbx9bBd+pMk2t17bl16NmeUxyCSFVAuT395pee95hLKZ3Dpz3RZwUxPrQZZO0eEYunl8z4cL14+F178/PMAkucvSyVbdcF5m/J6Q73m4ily+2aA0K52Xa0Ya58k/QJZseF48QKB/BwICfIVIpnsL68smOp1Y1UUdr5I328eVizhSLb8uxUI1aiXLwKEBF68fAGoXvRZSbZvphOM1zP1WkiEb8hIHNi5oe/wY7GE68chlPKWqQIGqlEvBOIWnr980W/zv73IF/vX3IdbRKhe8YVEoXBjDpg3N/iH1aghhpT3egKBiUvOezJ42nvwTnABL0KCzVJePt8rS/1rjm44pzcgqJGb7RNyTfHB4JB+ETAhm4m8kJ0QV8D4w2QKTOS5QIjw8je7kQwe3vUQJzYg3HDbv883cZt1vbnJHwABG5+CNDLw88uXMuHl5+C73A6/VSRDrJ3RINRiBzYY3njayw1tqLI7LQAS4gDBS5k2bMAvAeJ2yn1AhloBd0P9Wtw1eKwf2Q9EFiCv//15AKV3C7QqxN8i4d97SAaAwNUcnz2Jz8prhxaD9HyVmzSyPZtqvUDTcI/wP//sxMmNwG+gYo6A/PPLoarlnpxgKnvVnu5flRJQ6SA3tIgCwSEYDNIDLCwBtAF5+ftzr4M4iCizNpmR0Z9l3jEC8dvUrp6xc2xRAoLgv2rpgn+xUAQURK0Q10AVgRApmi2WSpA7qTKAwe3knvuF6PezHKII+BAtscIlZJov3nL+bAUiAxBa4g1FU9l8sZhP4Tklrt8l+omm8X+BeXFeIlY6A0Bg0nK23C3TFkTI/Iq43zPBAuJzplhhw33eCvABJ0CSeAmBjJDA8x6QvVKIjLmxeSBbwoyyUCjBZbPKwOr7idqphImL+9NqpdQbxxrx9uEIqOVuLj47Oz09PTsbz5QgBwfRuzl3VueML6TArVuMCXoFEZwpCQuhAPXaomntv70sFnnHPTIZzcOiZBcXv3/4w+LiYqFczob6kPhIsnHcTo78OfXiyB21c1Q96QPCcYFsNzcPIL558ODbbxBMvNAtRscIT9Qu41ovfjaa5AIhnqfnqtkToyTcE8jv5RS4qXAWYCw+fPTo4Q8wHj56uFjoluT+nolkp3rYqQh/BgloSqWzf7B/otqAODwk1c3MTD8AFDjg328ASqkLy+jWrR2DoRcbrtHYvdQ2eB4kMkJ4r83Wo4RXywADQCz+oI8fHz1aLKPO2TM6OpVa6PORcC6+clJ9+3a/k7RZGfqmHAjj296gUDLdkkKCzEggBREhEnIOoCgyIwG3+OcSRJPQ8+cWqtWVgtkuwvjxB8v4cfHRYjc7aQXiJUpn/+3baqMuOrnPDIAesC/AAUCiViAcx+fL89NWHBTK9HS8VI6CsAzdeoFkEYCEKRDQLQgjGBZNHL+9LOXlIuJY/KFvLD4q2FmYh4TbhzCZ6knF7frUAGngCNG3vt1vR6yqhQLJ9ONgUOYLXdWMJMDan/MIhHldN8R0lE3g+X8sJpIvlbMPHw7gAO1aLOf9DocFiFg/orPpGPkv9wmmcY+Z18k+vvVt3VYDwOTJKpAZ87fZ6dlcN18y/BYmVO5bbvHnkBv81x136HfZfcdtBbJXLpUWH/34w5ABIilbK3hOwteODxCI4XqEP8LhdPE1CabrJVoDgRwc1+4Ra60jVMrZBNJD8gCRYDXICO7ob4FiYcgmRASJkJ5qvcSUvTRErdgAK0lZ189FKsZ0RmgAqP2RsXjB0aF1AxAqkSo4LZ+dGCZ6QGZmZuE/AwwiKZfyoP1srrIUDoPNS6GwLIbgFxjWsF6+GgeMUj5gWUDqtiiQygi9A0BHu95/eZyh+nGNd1LPDe88OGzbTtGOgTn3NGvm2+8C3832hEKRWERCk1v88R/jl55A/gAH6JY1Yx/hArXjqqFaHqIdt5W+ON1PdSuNKpi3x0si7f39/SMQjwU5JErF0uw3PXncJ3fvzz6YnbUiyf+mI3nxghYc9KE/NCy9dC0O9MBRu9+KtI/396voQ9H0D49rgWsYi4dOH1Fzzlu1k067aquhoRcq90xk5sF9523iDNy//51Fuwrllf7S1n8Gy4zgrx79cM14uFi2GQlOrdbunNSDHEf1DOOb95oide14HwwKmKZTamvRCG93c+h8qYlgWJ958J1zzIE7MvdnLdo1X7LXhIaM317kywU7ju/10QNSyvttH+4it8JRFd0vtfyDo3rwSnv3sQCKocNPKm2BGr8diNqNTz+YmZmeBr36znl7bGzMcZd8Bw91Mc3MTsfLpeuRvHy+Wi487NMlfRhIfnxYKPUdtqLyqdUDLgwq/33bz51s9ZER6uTwJQBJJXx/1yrYenl2+sE3s/NIfQM6i7gfj8dnp3vxJNHNP7fVsU3Ltxi6Dcj3iw8VOh4aSH6kkcTumDgP71JAo9hyHxxXA1eERY4Eafzcb1ScfK0+eBLYQXx5sPWZmZl46t+J+QC5/9139+/fn32sKP+an5kxXMBMzozv+s7CC33D5Dd0YBBByn2G/v3i/7JP+B8DyIC161O8U2uLnEojAyqO52pTp866CuakC856i0LIJiAcwoRnpv8dDkdT8iyMB9NxmQg9IGjwJapcL2H6L39fWd3L49hbods9NKQX+hwWSIT3TkxMeE0gGBJth8OZcvioprDg2E9nbSbCgBzVRQDudBPOZ9PCSYdh69OzKeWesnvffzdwf35dUBa+nf7WQlbi5Twu/fPfV/Nl3HeDQf/N7/3+AhSrYE63B8RPmUgPCLitrP1UjAv8LnBWmFlFpyvqMCBcD8jbo6oKkdPrQRRC2GcRmREOkSKGiBIdBRdy/99TP30zY+P106hcz38HFKWsqkghURQlJZoq0g3RYp9iobOyADFcF1h7iHObZEsSEYsXA7VqAKESGTATF/wvVKeM97DdbkdQGMGo1q5whlTcDiBahiVM/2vKHY0SbEQLcf+ambFRYVSulb1udzcaspVCFEj1S6U+xaLeSgfyv/SBYSS9qpePqO1KEi/mC9bbOi/vYHDvL4z4QngbmTuUY77b73QqwL4jWr1z3OntG02CQOJ6OJydnZdJNAtkKhJykH/N2oCg5yqVunnFj21wkx43eGnPBE2V5CxkhD9YkSwqIUmSQrSsNUJ/jVDf9f1iqRg0+gY8RGofd+oVbKTUTjookIPDehAtWAzY0/OagrfGwJC5f9hpN6IkUmmfHFUP66IBepLIZWrqTLVyKYEIISwpTPD/nu2TyEymXMJzIrY8j9WvFHsy9f1iUPeI5ggwII+y1kIkX4PJNDq1KAk32p1DmCZYPSi/1Jug7ngxCnIjKtKAeqMaUDtAbQ4OGpUR8+C80MsNZ8BXpYJ0Z4y7S+TZabuJYGYSHtpRAs4nlO1aedZiyOV3uVxGgu3yuoJ6NPnREkoYG9/fP+5okILX6ycd+MXlI2K1E7ZtDofbR3XaUSIltXb9RFVBNO9sLm4CFKvH4Gdm4ylxyglLcJuIc9NWgUC8zHWzQeJzXLGBx6csSL5fDNn1HDI7HQjmiUYw8xmhYb+jJU/qbS1J24WDtaOGNRXH5L56XA8RD16z0qmq9cMDZvZG3YIWHSw2jQWtf6fC5B4Jg8+yZloPpjPd7FXN2B7a55/C0P6jIRGvf8KrRwyXd8LnNSSyCMplMEfIparUV0G4VqudmhsjnFOoNaodqxP2EwiW+8c1wYk0QO1UWHqIMV7XLJti4cCC1rez/xonojxt81kzSFGwADU67h0fHR0f57w+XTtHxwkZH+XuEX+2XGA4vv9RtxHSbyN0oHJNWnQLZdKoaBAcgD55b1VOqvDQIlFdA08qt7wcuVfrJPU39XJ9D9DFxPSsrdzw7Wzi304pGrCkVoz+liQ8hDBsV8AXwZ9JTdqF6M6g/Pg/OBRaviYR+sAAgkWIXZ4pF62GHLAkMXpSp3dUwjoPPCROS3JPoz6KyQ/KCOMI3nNQ7WgjHjMRKcxaq1kz387eD0QV4adZO5BvgWmB1sK1BUmRAoIkBhUlCP7Fx/GCop0n/WLyMknCPd44GEd+tNaFjIzIg9XGg7fvDjDKNfBuPjp3rFm54wgLlodt8DXqST2ZxHTsXadiZGEext9tRYfZAAmJ4fvf2YAAPelmPRPcqKg1W5etZrN12jy/1BSMywHt4vzsUmteNoUxuJ7B5Glk/18jsj+0JCU0LTF2fke8I1rnaL962FGjtZPKiAcY7gHlU8IgELAJN2iWBt6+3unUVSOvchDekuL2gATDUjhoA/LNLCbbvlG+edlqNVut1in8//T0XFOSIomcnZ7B41aTd3BBKwUewrWGlOpcJFrtdNrA45MdiB5M/Q+Oqpa8xai2gFGEQ+2G4uOBneCpCs7wNdYU10x0BUUR1dRdW/khjo7GS5LnzTOEcdY6w39brYvLpiQ1W2fw1Om54vSjSB5Z2e8YB0GkHwirC030PLMCpMfvk+odRTBMxqpaPqLq1n2iRhGti+qllzM7EmRrFUgH8l0oGg5LUsAGJAcr6CfSeYvN3xinpyCeZJM+e3qpYatZqZddAZARez5iyd13vRanxGIqXwP96hiO1ea1FCYR8AGVk4rbiScTwGl6fFcDQSTMW/aAIFssBjgCS3/a6h/Ny6T2gT592sLYm+0umiL58eH/6P5qoAxRMAtcXg8Hs/JQJ9uLENY4Aq4yUD3SI2D7RGN/4XxOQq4DAsrlujtxOzD7zYxNs8aSBo7TpgXPaSupseebIBI/iVp064cf+3J2CxBrn4fPpZfrILhTCsxCtsfcKPSjb3tLiW+bxXxMRkakJLuIe4iNIE15cN95115DSXQVxxj4JX3qlz3JnLWaSQPSueaYIBLQ4IEyyjUlR18ycodQpUdG9a7D4jwuu1O3IFELEP89iJJAKQ/a79oSMBUXJhqVdp13Mq/lh2R9ur8EjzJxBr6zmUhZIg7tUtcgLWnVsaZuIyARBahNoNhXgriivqW3EHmBOtVwt9IJRiLUj9p1mG71uBr0OomqA2lXgsQbrHUaJw0IhVUBBETCmIyY226s5js7iOS7+989sDlfUAQSbtEJg1EQQdOlA7gukkkKC2QDgnZw2fLioz/AgXRLr0GgPh1hSkKdUOW4jdPtANMlvNbRgVRPqhJxBqKapijt48qIl4Q0SEb2q5bdiCAEksF9kZkHD76x1eNLRdwy1IwJi0Q0ZXLW0jTmtSgQN7DpPwTyw/eQ8LI9L8ytIEg32pUI8Tq1RjupaFoSQkQQaL0eI+r7x/UIYyyB6onGkWS7cQg+4V3d3LPzUPL7zSCSmRl7irs7QcY5U7eayoTpwc4M9wv+V8EK7h8DYfzXre+j0j2S/f1GW71HgMrrLc6hWmP/nY60friP1W3eg6HmRAUydqjX8N1Oa+EhNzOoXf25ehb7e5SWPuMWTDmiK1fzIqldnOq/fRIQCP3lonnzf48eyyE3rNxRGg3Fy7t4mPzx/tseEIj0gMSH8eREATKmewSri+YgH8qBdj24HkjeTxzjRDnX/S9YeCTJ5NO61CiQs9b55acBebSIzcFu+47oW0puQ22cnI/hsAJBJBFglMmThsJ2udBFW0t5HM3s4tN0Y9peNbEYO8RD4vCNR85Nw7hsKUmc/6nW1JKXzTMQj9aUQP9I6lpjX3z4MFsuWY4D0kIom9lRXcH9fz9YBeIwgdDYcoC5LlCVarKOSS5lMbzTnlNES7RV4JsHw+Xy4MFsDmwTMoWk6atw4kntHGiJkkzikxcXCglgv403j0CG75Es/vDo0WKhW5TteyQ6I0RdAQJMvEKN4mBAOIBFgUKGGOC0k1q0YQgw2tfzMEZCqS42b2B2+OBBTzQP2AN4OtOVMV8Wz3pcC7ww4IIggnwY/gVpgOXC+pZKWb3jYdFaHlr8AZ78Hls5UqItYfbqeTstJQCTGh3RjA1bu8QwSlYa9RoDUj2p8K7BQzAyHkbIxGdnpnF8g873m2/o79Mzs/FEgbr9UY/WC4SnwLG0JMQQTFAkgVActLhUKpUKhUVcfYBDxyP66+JiATtSBpprwNwp/8A1r9MC9b5uA3oHT88oJAg0NQiXBwf7jeqQ3nRsLZXUfLdbzmUS8/OzswgIS9l4q4ZcqVwu0UAMa3du5SZKEiy8eQq6FSS+cXOrpcRGAdH0RqFQ6nZLKYUbaDbjXIHKCbCP/aN6BQJ3SOeHb/fbejKimaqnVU5qJFI/OT7uVIb3fWBVnA+rWTzZ0i3TWRTodMqAIr+7W8IAxnFBCzdpXkYUTE0i2JKiz23EwedLlWKpXDIq3N0yDnrWJJ+iGaVnWBOA1mkcN9pRAhNV9Wm/ParZtn7xmXYb8xRJq1WSd65uAqQ79mFFTWXz+WKxmM/S2eR31169epWnujWOVnJ6atDepgR2fql4eYuSyuXi0tKvFIsqK9hOnM3SO6XJIR/9FMfwtgylUoPY7gIbaB+xWe83NIM11k0ZdY5qaBk8exM3fP/B4TGLy3hPraCKMBDF69evdsv5AOcYHwVqct467RF4YL5JS+kco4i2tLy0tPxrDdRR1msgxl+HHnX1ulC76OT8lGwx70rDhC1kIpD2Ee6EeokT0iruut47zjM5OYle1BPNgzKsrb5aXXv9+vUaEwksTvNcM9OS82RSu7xoJYUxq0CWn/yy/MsTFEu5i1AmiRsvOum+stcUocB/LvCLAKTNgECOeEvP2DnTbzEgnCENQVWubTDAk2HZbgl1ClHgeLVWKuEtg4LNc1E6N1mWAtEQ+cq4sRuYLWtLv+BY/oVCKePhB+66j5K0EMu+OVpkQCAYQg7ARfVepLQP9w8Oqsf1upHL4+6IWu1cexhlgvaN5S0wEEm+m/L4RnhJmhDBOk4xJDZFbEeNaBHSc1lFhsOAUuwWles6SbFAV8d0xGtUS+q4lQ7utbfh7oPUPNpuHB1D/tg5pGUiTH6T9ZOj+nW3QZ+khXU7DBQJKtc9vBUFkF1QqNbFpRZkEuYdunuBGPLMBAJQlpeeVErdVODqc7pYcYAJwpVwd91JakftDnjXo2PcXTDxe3gSqVRrmhipH9VF6r+VWudo3178GsAhl7r513YYTLnKkAH6xkUtKSWT500NMtBxiIHj+qXuEalkKJZFKs+K3bx0zUGLkcpx9fCkHh1hdZTjdjSo1qqQaPm9epkbt7TAigLoqjTk+X4S0Doot+PanSu7CyBpLJd2Xw3gAHuHYKKYX/NGN/8s5uvwE6lYrthxwHgGQkGSOHll3xK4pP/uH3UqIkxQAOJBu3Hp1IOMn9faWuQWisvr92gnQOeJAAH0gNWMvNfhWBuE8fr1KiIpR2HlR0fHMY6Pu0ZtAVVGHMv9QFAoWql85R3k9drbwf5JFRYeaG/F6/VSGJCV662oJ8BLogLe25okG40oJxh1x+EbwNfhWAUcK7G1Xarw9D4U41bCBtrMRctD5MHG0q+l7lVIzHQEGFQI6GMD951d5I6CW4QGp6zuH3eqSR4r3A2YvE7NLLsKg/5KGS6PNQASU9ZW1nAvlNjuXcbRYI3u2nC8y0+Wl22SWUbvdQUSmm7QIFFtVEboPHlqyg1gXzp/gSgCRKxTgwAZBqSiXvtCEjncIbpJuDQMx9rqyuu1NSUWWwXfhfwVzc7RO4zvDAN3Lv6q43hGh129lp6hp3APb7Y0SWInAglg1EWkCu4aGOxXJ40HkLerI2K9UTHaMrGfcehpB7p9tUtxrK7agShrq7GYDEhiK7tAkvNq2Nw9DkjRLMDQniz9gmJYfroUEcXI0i9P+mRSMuomAyLpkVsVbDmCNZJ9urPQRxohq9fu1Bo18/VXNXtgJUfHsbbWQ7IK5hGKxVZWlBhRYhBfdvPlbrmYxVvmqmqWPtDAOelTfiZSp/asX7u0bpYfxlIseVVDqxzXBRUChL6raGsKolumALVeYf0PB8dV4YozSOFy6RULGSsrOpJVgAFmrrxeWQMoIXkFcIKC7eYZR6fH2yu/QuBbNnAs+aZcU97ks2dP7VCWKvazr5bTHhWz1A7eN6nXSGibkH13hNawj+pt5nsPO4xoDYDhPNnymg4kBkBwvFpDGDFwWCEFnovJDB8wYvhDvlQq/vrrs6UlplSmQFz4zRhiEowFjd7405NnxQHlonPwOFnNBETQqR+x7UG9ttAvM0DSgYwEt7jAYti6cEMOg5fzr/SQATOnYxVQAIDX8kpQgKdiMV1Qa4BlFYDUEMUvyxYcSw4XpLyRJZEXIksglifPlnvKlRqwEo71YdUb2JmhVRoHnfqBno50oubUIIuvmiI5ro0k6+12jbWSe8hIX0setRDK2cG4ZXBRbICSgaHLIIxYeEWOMZGxF6FE7AHwyXIk6HSOkiC4reWIGBAjYPtPTZn0iQQcFq9PJlRpt+vaLQ3SKgMHCMT8YgQuWGtQJLhlik43GAnf0b8GjK/YoyKHZXTdulGZwExg6KolybHoSoxI1ERMyoJAbCFweflZBATi5PyRpSdPnz0D/xUUxac6EhSJLZiAO6qxu4nClKSIiAGjrmvWPlaxPBaOXKNZ/T4gBWflNZohfXg2yX4ShmnWmq5Xhmqh140pCtgHjFBItjgzBsQqERpBIkgkg+IS2sczxBJMGsq19Ky86+Xs52BqYYYEs0iv0obMqXHIJmxrCPRCVt8+OW50NCHZOK4AlaAR2UekasO2I892GJjvhdhHjQEtXVcvai1rMW/MAuQ1BfKsFy6Wn0IACfIjaJzPWExBLEsmkKdLxZJoayjXGkd1nWV4PH6iNhoaeF+ccKXvTop+zHsqGrAK8MV13Sp8YFzH1eOarfsXk6LdVwY/pFZNLT2GQX1t7fVKdE0O2mL+KpYmeukH2LlfECOigwJZNrXtae/3pYqtoRzdavWorXfPcE6+hvVdnDDulli/w89zq+dab1WOT9hbsDUQQs6R/eAFAlmzAVmVooADZEHNRJFlp00gr1+XirtlK5DIGArADgQdQC8oVroWIDT7OADzjep2EsbdKEuPiL83e02LIJXg/YwM0x1fdHZH+wNtqUy1rEDWZJg/MC8dhkDsOF6tlbNq91erRJJPUSwARHy2PIQEDwBBNvjWQOKlmgX/+Gm9J6xWAtZDDY2qhl9FAUweSCZmuFilP2JtqQNnenQbMYAozDgQhhRblfrk8Wqtm4pi7cdi60+X8ZtLXABkKBJQLckKhNFYQEJDdKB21GF54UhYrbU7Wu82z0gsj07adK/R7wbdShK/K6CXuvvI/Bhu9a9aJLKGUWNVUaIxmYrGEkIYkN1uNNy1plIYF0EDnPA/9FoDOJ4sF62nR4wTVrhhECJ+p9I+rApYHEnWwEHt292vhnu6mNwDlOTJUY336ofFBrkjnk5ic13F3GMVndWr1wElBk6XAlvtz3y7itifS0EcD4JEglLy2ZNBzdK6qiUgenps8aQy4gcXhqXFoFrvHB/CpCu3uH5iCUnJSV29I4KXVpy98qP93Buto+exqog+CuL4SmwV7QR+U1Z7JNIaRsphbxHLcbbZAteaAmMfIpClPrJlSoTZa6iOyh6tnxxRSti3zPphrIN9PH9ZaUCybhaE+869MY4CZMvgVzECcXxN5mNrMlr8q4HsFyt22fKzpSFAhhg7cMsaBHa3vWf/3VujzA6pOygM0kG6zu/qtjscYzeank0hQW7st0XVSK/0sMJZ86pdQAJOCgC8WpPdBHRKluHxq7VXq68HqkPlLLZ7/WqvN4ATRiBP+9XqCZaFUvfcPfoEgeOesfGx36gEqkeQV5kU/sR+2MpSyH6HuyiQmBjI7O03ukiCgASXH7MQmQCQGI/u6/WrwSR+dRcUnsjdyjAgweWny1YK9mRpWQMcvHmrEs7WvITzBk0x9qKGHVnwmq+lFeB3R9WkmSdGiI/j7qm8FYmQ6pZZAX5N9kjAE4OxtdXXQwZWtQGq0G8kAMQ1RQI9yksrp88qxW4p6iQ9HKro9HiMXve3Bydq5fiwbWYdve5RkwVwpkhw07R+2NBqGEX0vkakbVbobrz/NUDZhXRjF9wVkVeH46BxPUC70X+1E+BnSTI2FjC8L+RVWMvGE+Wh3o0SgZa3Nfrlo7SfEdvItfphvf7u8O0V9ssOIOo5CaRckDJiC+TR4RHta8RTfYDdZUvZRmnL/u5qLERcA07XFg6JB6OoXbcg/0hCsrX81HC5S7/Wyt181HZPBAziNAh6sJ/x8PC4A1kGnR2bafVkyHFEL2ZX/zV0qw02H6nUIYnByEQ3hvtqQ1huDqdgCVOYoL+6Sh5UsyYg5OYHdAvHU9PlVvTykaWdnnMK9XfHtYCHc3IjKkympmidagM0X8fRGHaGj+MClc4+OoNqo1IBK6kLRJRoXyMt8uEGl2vg/hyiCkp9pThoRTvPEwfeQMnKUphp98pzWGKk21a2LRJq5Fju9ODdDgJSaITUwEIqFVoFgr/Uht5LDO8ogD1Bh52agNXHE02v1YK7xXbuIeU6vGNyMHVFDdjkJ5js4U3distPh1dKny1p5VLUZdyNo3fPGizJvdPb2ulHg/pDAAQ9O9w/xORpeP0QUEc01KYgdnmBLoU5P9fzaPv9N01gJymwH+JKJK9eG327brZp+MtQsvtruRgmnGegbE2DMnomWgXxeYEFH4E2uXjUM8xFXFftC4KuQEqMmzLAWfQLeDh2mPxg+G7J2ORVdWBmIVG2eUNF8mxpOA5sQh8sBXK39G5kcE0+fWMBBYKt9sGIRK65K4eL9+tb6Z4RSMro2Z9eiOknXca4BxnKcCQQ1fOBMaOZO9odVoWnOOQhFzYp1j5zmLTzDNtMOEJPS/l57zW3c2EOzEfTEjy+4OL0tEaP8Z4r9hiGIgHF6prn6x0ePjtEuRBHeej2To82MYfpdbO1hcl5rX3AQ2+7oSWVcPCOfnOYEzzM7rX2E1yxE+eg/RgDSLB7wHKWEJWrBIxreQiOO8PuEUAqxz1C5fXCPMCf3qMdSyOCpCS1yhWbBZiCNDrgrbVkmMdNof/iUvitBVVpuHk5JgaRrCGOLO+23tsXjMnGHZfR716xSWXZRqBFUQ4Ug1Z5R6SoVqu3YaqVe54rbphET2QdHQOamiqhrzuu8C7B5C777as2fhweuqO4aoHy6nUeD/Zw9sPX5bJmVoCXIZxfvW3oNtqv9BWkGqIRMYmnwY+PIKUCVu4h1+xuHRzsY7LY1oK1Y3QSUr3HbK7cdne4iVIq51+/eqVr1avdEuJw99mvXMSNHhhPnizR3fUrN3J7TBGtU8HDnpDp6mnhwcHbaw+0Uwen7zBAXFTb+4dtUTLSM3q8xHN190A4D9Tr9atV7ObYzXfL6r2BUvQEEVPlcrHy6zNgKLTfQbhqa93S+YdlA756XG1olc67/Z66eZxX3/LBwoH3j9vtI/BU5sL899ptd1jYgArUCw8Y402Z8I693BC4RE7RWzeVSl3aTHPlt3A53YaxYyoBHgwL7PsHVyUi/S4vabgoJM2d9uG+cTSWtRNd15kCUwqpeew+K2ajeAv4kSvuXIY309rNZ1Oyi7i5a+bSS1KrSVQOfYfq7dsraIZNue6ZPurtfw/q9QMQg5GPGRHWOq1xn2/UiefZfL5x+g0PfEiSQoJ+N7HhYqdzd7JCrsvrw6YI5yi8n+s3ElE/RAgBDXJdzJLMNT6uCtffbctDLMoFeggPjtqQYuHo2DISnPyAjrqN6Dd53fe26Tec8wymEuOjfeGAfvBRvX18cNgG5mvqSjvyx9/Woujb2Zi+NzqQ5b+rtU9gdCpByyKM0xUNRiAu0ZGMiOx7N9wej/tT7rjEtjvFSJJdIKlEgg6KxXprBI1+crtWBxXvdMwFvvpMvp1ztnVd3D+uKGq7ftipR1VNjViMF1eOl5Ja8/wS+39a8M9l87O/2XeU8E144/k5dhBdXjRhNXi8SZpFLBJ8cLTWOay3NcXcbT7sqJ9yQzqIJnXc9cFWKJh85bJ+VKeFB7O/Bq1MTAKI89ZpEwb90WwZ3VifPMaJeIrvPWU/W3jeL4ldZAYUjqly5bh+CTmSSJvKsMs/ST7py+C8RMRdn6PjjubmR8Xmef0EKI7fY348GYtop5d48Oi09cEcl599x2RIFi567/9ATzJdtmgx3fBIHh+PByPPz2m/ewcmddKufPLtc7147/dKtZYc4Wh7+Gmtp5OgVL6Idn6BvXHw2R8/7rHx8eNF8nMlgte2XOCMYmmdXzQxdx83wXbqrQ8aPAauVgEiGBm53vHaO4WxIZbu/vg45bJ5VoOY7h8d5TzjxBFpojDOWh/OPu5tbm+9YWNz71xzWLyYkxv3+nCMj4+7XOPsgdc7br0Z/DjRLvc29Qu82d7c+/j+w4czEPNlU5kko15udNQ3GqzXz5qXSY7d3kHAe1Z+zn3oPOhavUyP3384Pb2o6bspYe2idXoKMAAFgNjahrEFMN5/oOd0zOByjYkDONrBNUr8TVgOgKJfBZfjI4NyoendDGOVSzyaGaYS8uKkPv92evrS3l1534I10SSBD0a01gcDBqwhHW8YjDM8Xegd9xkqIYgRcK26c9Vod7wSiYiCoaK+cYhZeOSVQmFYAMy2DuX8XIsE+YCYpDhWA7q7/jO3nNRndNuZ3jz9gKcnwLNcXOCp1Q/v2Sri/99sbeydURgfPirj+GljwTAEF/Bi4FLZuOj9Bu6Jhgx2Zzr54wc8AgumtrFlXhChtBDKBXzg2QV+3l7a6TYLJJ8vD6+RF7zZeE/l3WJKdWaBAZ/aYpN5v7eTJgFRQQgQG7An/rTVtI1Teg1AdY5wIgKJ7eyhVcC7qYjxiluGorIXw7rB572R9Tuvez9bJq5xBbJBugyOOxtvNpm8z8CxWGEwlcZn0e73KtgBf0kP5p7iPM6a5x+sowWIMWbgud0LiBmatrdpu4QNChULPr/5ZpNpFjdOgopv9DP1SmoqII7bDliL2M7WFq48uttBGGw594rw0XjUBeG2aHhphkXlI7jX4h78/yOOMxZ2Ti8o1hYEkXN8KxPqB0NjdfdhfOD21k4MBYJ3F4ycRj7d9xplPu0SNxTJ7dsOAb3s1iY4+81tC4z3uk7hROkCUpmxj8foEA7ITlgD3btubW1ubm7QgHGe/PXDKRUOvtp4/5mptVtMa/EDN+gHhhx3blM2cdn0f66NQCA6//AxLd9Depfe2dYDBpX91rYBA6Zc3Ct+pCjOGIhTwLCJnvlNOp2ObWxt78CARd7ZArnSS8iKvIIRo/cmepGWCWVbh6J/4E4aVXxUTn/8E+wBMwRw8ntvNmKhuyS4ibNnQqc6vMfcDcAoYkA2JnSGIHACWzsw783tzY3trc30Rjq9ubOZ3t6A5wDTpiDLOyjfj80eFnalU+Y18COMD8R/JXInFNt4s4ehapT7fJEoF01AsrOFE9myjT06gdb7jx/f63NhKEDzILrsbGxsx+SNtE8IEXlbdoYE8OCyPzSV3pbljZ2dtJzeMsKf8X60ELhaiyrr3rbt07bT6Y3tHcCBh38//z65o9ykdn4KSFA3tiyX3n6z8YHe/+D8/Zk5izMa6Ld2NlY2dzYCobQQ2pBlWPrNtCzLsdhODH4NCbFAaGMzFgikt1A2G2nEstdbi7P3mBLA5eBDrUhQjm/28GRQ4M/c41s/8bX3hgm4B2Rr86NxgtXQC0QBhrATczoD6VgwthGQdmJ8KCCAKBDQTlqIbQox2RXbEeQY+oAVOZ3m0+gKQC66duqHmc5afUCQPmye0dPjf+oWzOPsXOTem+0+Ub8pfmCnDHXfu7Hz5s3OhgzrHkqDBNK8nJaljVggBig25UAsTfBp+EOaymUDxSOFnLK8go7AoFhUWymOj5tb/Z+48b7VvNDc438GB+FGBTxcBIK2XxfEbJo3DSxvNtIbO7KQ3pH9aZj+RloOwazhR8wlb8BP2bUpkzQY+c5mbDMGCgcG5A/LUnoHXIlM6dr2xl7PXAYEAnoFEzkVr9oP+WORRBjV2dqyCgV0C3yvjgJUaifN8xuoSZtptPHYRvDehkxiMjwhh3ZiAVcgtrMRCoRAocAjE1FYiaVBXmD2G7wsu+Ttne2eiuGwAUE/vIdHZS+Vz42F9synCUv0UScP5qU3ME5jtNoB7VmR5FAA1h10Sw6B9sDcV3Zi6c3YBvha8MIbmztoPSAhAAKSC5GpzVgoBn9IC/JmjE9vwANwSxhzi3jdbdtnAcIPiCP553GATNx4q4Mz8O3bBmunkQqEgvFiJx0KCSAIPiQH0jvgnEJOImzCSsP8MRIiIWBxbVMCnMHNDXlne2NDTu+sOAVqUCHwBBvwHzxgIRC12CD1Jq8/wzSCd/2F7wfnRnmKxMijaKwFolHEJdvcWBFCMjjVjZCQTocCTpAAxj7wXtt6EN/WacneRljYkO/K9wObb2ik30kHePBgU8EYqCL4Y0mQkcPAG7e34NW9z6KhFwwdsjYX+QuDI4AEONEpC9ssuQbz2EQGFAA9CoViUjoES0qENBIRxkO2DFr18T0jikDoP0JqFUltbuqhH2YNaEIs1sRcwnZaFkCsIOvTDxBq9c+iHOz09FL7y188xBFHEg8Mn521LNUOjPggDnBGYBFCOsbHtjdgbdM7TGCsksCYO/NE6Fgxs8L1MMgYKB9YibCZngRnIGwIQlqeStMI3ivOIBNtts6T/F+TB9MuwsoNSG3PsAJ12rr8oMGSQiRAHyXfgnlgMARHu4OL2DJmQOtVp4znGqmVLiB0FVh2QMFAtgGuAqw+hp5iS/2An2a+D0sREfLXcVAvzCu0Gqfflukcq2jpnR1UbxkMg5r21pu0IGrvjUVsGskgSxbpbxfn9C48FA3C+cjsDuQS8oQ2YzLigNBym9b+LvWj15cXzSSYxygh/ydIiD+CaTgOyFGxoCKjTadjMfxs9C0be5pGc3d6vyCcNbyUVRwkSaJ1CE1P5M8xjT01iSaIZXtzewe0FHwGLA/284Utn9arcf31MUo9OB8MBtmxYe8t8LLoIoGVBORNPZ07p6XCCz0jl4L8wHX4IC1aw4JfYC5JsZyyggxYiSBMgWbJ5A79NIdgfE+L7//yK3tGx41c2UU3MtyEOhigT6HQBqsgwHKfYyKeZGV1lvn7pnzecRhYnTP3DARJ0Zp4+lXPEZlYgBeDRDbuQiI3alaVRr3eUfJ/PUYtXy50G3UL1WBsKnlBNQpRaMmwoFetAO7okCuMe/Xdfh7BXFy2TvVkagPdGGhY2vymur7vMrqh4SAC0qN0MtmE9PuUFp+TooNKzPtHH8/pCy5EkhSLWQ+CId/UV+5dvWH4O4aLS5wH5FjNJD3DNrB/dp2u0gJzBOTSMlLEvb0Vnji+LBDgk8ZOQKul4ffCO32f61w4+g6R3veF5TaXyT/nof4fNyOU5wdNuAsAAAAASUVORK5CYII=" alt="ក្រសួងអភិវឌ្ឍន៍ជនបទ" class="header-logo">
+    <div class="sum-head-text">
+      <div class="ministry-title">ក្រសួងអភិវឌ្ឍន៍ជនបទ</div>
+      <h1>របាយការណ៍ត្រួតពិនិត្យ</h1>
+    </div>
+    <button class="back" id="backBtn">← Back</button>
+  </div>
+  <div class="sumScroll">
+    <div class="card">
+      <h2>សង្ខេបការស្ទង់</h2>
+      <div class="stat-row"><span>ឈ្មោះផ្លូវ</span><span id="sumRoad">—</span></div>
+      <div class="stat-row"><span>ចាប់ពី</span><span id="sumFrom">—</span></div>
+      <div class="stat-row"><span>ដល់</span><span id="sumTo">—</span></div>
+      <div class="stat-row"><span>ទិសដៅ</span><span id="sumDirection">—</span></div>
+      <div class="stat-row"><span>ចម្ងាយសរុប</span><span id="sumDistance">—</span></div>
+      <div class="stat-row"><span>រយៈពេល</span><span id="sumDuration">—</span></div>
+      <div class="stat-row"><span>ចំណុចសរុប</span><span id="sumCount">—</span></div>
+    </div>
+    <div class="card">
+      <h2>តាមប្រភេទ</h2>
+      <div id="sumByType"></div>
+    </div>
+    <div class="card">
+      <h2>ពិន្ទុទាំងអស់ (តាមលំដាប់)</h2>
+      <div id="sumList"></div>
+    </div>
+    <div class="card">
+      <h2>ចំណុចតាមប្រភេទ (ឆ្វេងដៃ និង ស្តាំដៃ)</h2>
+      <img id="typeChartImg" alt="Horizontal bar chart of marks by type, left versus right">
+    </div>
+    <div class="card">
+      <h2>Route Condition</h2>
+      <div id="routeStripWrap" class="route-strip-wrap">
+        <img id="routeStripImg" alt="Route condition strip chart from start to end of journey, coloured by defect density, with bridge markers">
+      </div>
+      <div id="routeStripStats" class="route-strip-stats"></div>
+    </div>
+    <div class="card">
+      <h2>រូបភាព</h2>
+      <div id="sumPhotos"></div>
+    </div>
+  </div>
+  <div class="sum-footer">
+    <div class="sum-footer-row">
+      <button class="export-btn" id="exportBtn">នាំចេញ CSV</button>
+      <button class="export-btn" id="exportPdfBtn">នាំចេញ PDF</button>
+    </div>
+    <div class="sum-footer-row">
+      <button class="export-btn" id="exportKmlBtn">នាំចេញ KML</button>
+      <button class="export-btn" id="exportDocxBtn">របាយការណ៍រូបភាព Word</button>
+    </div>
+    <div class="sum-footer-row">
+      <button class="export-btn" id="exportPptBtn">Export PPTX</button>
+      <button class="export-btn" id="exportPhotosBtn">នាំចេញរូបភាព</button>
+    </div>
+    <div class="sum-footer-row">
+      <button class="new-btn" id="newBtn">ចាប់ផ្តើមថ្មី</button>
+    </div>
+  </div>
+</div>
+
+<div class="lightbox" id="lightbox">
+  <button class="lb-close" id="lbClose">✕</button>
+  <img id="lbImage" src="" alt="">
+  <div class="lb-caption" id="lbCaption"></div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<div class="sheet-backdrop" id="sheetBackdrop">
+  <div class="sheet">
+    <h3 id="sheetTitle">Other Issue</h3>
+    <p>Briefly describe what you saw.</p>
+    <textarea id="sheetNote" placeholder="e.g. raised manhole cover, missing signage…"></textarea>
+    <div class="sheet-actions">
+      <button class="sheet-cancel" id="sheetCancel">Cancel</button>
+      <button class="sheet-add" id="sheetAdd">Add</button>
+    </div>
+  </div>
+</div>
+
+<div class="sheet-backdrop" id="bridgeSheetBackdrop">
+  <div class="sheet">
+    <h3>កំណត់ទីតាំងស្ពាន</h3>
+    <p>Enter the bridge's name so it can be labelled on the route chart.</p>
+    <input type="text" id="bridgeNameInput" class="sheet-number" placeholder="Bridge name, e.g. Prek Tamak Bridge">
+    <div class="sheet-actions">
+      <button class="sheet-cancel" id="bridgeSheetCancel">Cancel</button>
+      <button class="sheet-add" id="bridgeSheetAdd">Add</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ---------- Defect types ---------- */
+const ICONS = {
+  pothole: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="8" stroke-dasharray="3 3"/><circle cx="12" cy="12" r="3" fill="currentColor" stroke="none"/></svg>',
+  cracking: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4l5 6-3 3 5 5 4-4 5 6"/></svg>',
+  bigDamage: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l9 16H3L12 3z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="16" x2="12" y2="16.5"/></svg>',
+  sideRoad: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3v6c0 3 3 4 6 4s6 1 6 4v4"/><polyline points="15 18 18 21 21 18"/></svg>',
+  other: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M9.5 9a2.5 2.5 0 0 1 5 0c0 1.5-1.5 2-2.5 3"/><line x1="12" y1="16.5" x2="12" y2="16.5"/></svg>',
+  structure: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="2" y1="7" x2="22" y2="7"/><path d="M4 7v12h4v-4a4 4 0 0 1 8 0v4h4V7"/><path d="M9 21c1-.7 2-.7 3 0s2 .7 3 0"/></svg>',
+  vegetation: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22V11"/><path d="M12 11c0-4 3-7 8-7 0 5-3 8-8 7z"/><path d="M12 14c0-3-2.5-5.5-7-5.5 0 4 2.5 6.5 7 5.5z"/><line x1="7" y1="22" x2="17" y2="22"/></svg>',
+  roadMarking: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="3" x2="4" y2="21"/><line x1="20" y1="3" x2="20" y2="21"/><line x1="12" y1="3" x2="12" y2="6"/><line x1="12" y1="10" x2="12" y2="14"/><line x1="12" y1="18" x2="12" y2="21"/></svg>',
+  bridge: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 18v-4c3-3 6-4.5 10-4.5s7 1.5 10 4.5v4"/><line x1="5" y1="14" x2="5" y2="18"/><line x1="12" y1="12.5" x2="12" y2="18"/><line x1="19" y1="14" x2="19" y2="18"/><line x1="2" y1="18" x2="22" y2="18"/></svg>'
+};
+const TYPES = [
+  {id:'pothole', label:'គ្រលុកសំបុកមាន់'},
+  {id:'cracking', label:'ផតស្រុត ប្រេះស្រាំ'},
+  {id:'bigDamage', label:'ខូចខាតធំ'},
+  {id:'sideRoad', label:'បញ្ហាចិញ្ចើមផ្លូវ', range:true},
+  {id:'other', label:'ផ្សេងៗ'},
+  // Full-width buttons: whole road, no left/right side
+  {id:'structure', label:'សំអាតសំណង់សិល្បការ្យ', wide:true},
+  {id:'vegetation', label:'សំអាតរុក្ខជាតិ', wide:true, range:true},
+  {id:'roadMarking', label:'គំនូសចរាចរណ៍', wide:true, range:true}
+];
+const SIDE_BOTH = 'ទាំងសងខាង';
+// Defect types that count toward the Good/Medium/Bad route condition score.
+const SCORING_TYPES = new Set(['pothole', 'bigDamage', 'sideRoad']);
+
+/* ---------- State ---------- */
+let state = {
+  active:false,
+  startTime:null,
+  endTime:null,
+  totalDistance:0,
+  startChainage:0,
+  direction:1,
+  points:[],
+  photos:[],
+  bridges:[],
+  openRanges:{},
+  path:[],
+  maxReached:0,
+  lastLat:null,
+  lastLon:null
+};
+let watchId = null;
+
+const els = {
+  distanceVal: document.getElementById('distanceVal'),
+  setupRow: document.getElementById('setupRow'),
+  roadRow: document.getElementById('roadRow'),
+  roadNameInput: document.getElementById('roadNameInput'),
+  roadNameDisplay: document.getElementById('roadNameDisplay'),
+  startChainageInput: document.getElementById('startChainageInput'),
+  dirToggle: document.getElementById('dirToggle'),
+  statusDot: document.getElementById('statusDot'),
+  statusText: document.getElementById('statusText'),
+  toggleBtn: document.getElementById('toggleBtn'),
+  markCount: document.getElementById('markCount'),
+  toast: document.getElementById('toast'),
+  gpsBanner: document.getElementById('gpsBanner'),
+  main: document.getElementById('main'),
+  summary: document.getElementById('summary'),
+  sheetBackdrop: document.getElementById('sheetBackdrop'),
+  sheetNote: document.getElementById('sheetNote'),
+  sheetAdd: document.getElementById('sheetAdd'),
+  sheetCancel: document.getElementById('sheetCancel'),
+  backBtn: document.getElementById('backBtn'),
+  newBtn: document.getElementById('newBtn'),
+  exportBtn: document.getElementById('exportBtn'),
+  exportKmlBtn: document.getElementById('exportKmlBtn'),
+  exportDocxBtn: document.getElementById('exportDocxBtn'),
+  exportPdfBtn: document.getElementById('exportPdfBtn'),
+  exportPptBtn: document.getElementById('exportPptBtn'),
+  exportPhotosBtn: document.getElementById('exportPhotosBtn'),
+  typeChartImg: document.getElementById('typeChartImg'),
+  captureBtn: document.getElementById('captureBtn'),
+  cameraInput: document.getElementById('cameraInput'),
+  bridgeBtn: document.getElementById('bridgeBtn'),
+  undoBtn: document.getElementById('undoBtn'),
+  bridgeSheetBackdrop: document.getElementById('bridgeSheetBackdrop'),
+  bridgeNameInput: document.getElementById('bridgeNameInput'),
+  bridgeSheetAdd: document.getElementById('bridgeSheetAdd'),
+  bridgeSheetCancel: document.getElementById('bridgeSheetCancel'),
+  routeStripImg: document.getElementById('routeStripImg'),
+  routeStripStats: document.getElementById('routeStripStats'),
+  sumPhotos: document.getElementById('sumPhotos'),
+  lightbox: document.getElementById('lightbox'),
+  lbImage: document.getElementById('lbImage'),
+  lbCaption: document.getElementById('lbCaption'),
+  lbClose: document.getElementById('lbClose')
+};
+
+/* ---------- Build lane buttons ---------- */
+function buildLanes(){
+  const leftLane = document.querySelector('.lane.left');
+  const rightLane = document.querySelector('.lane.right');
+  const wideWrap = document.getElementById('wideActions');
+  TYPES.forEach(t=>{
+    if(t.wide){
+      const b = makeButton(t, SIDE_BOTH);
+      b.classList.add('wide', t.id);
+      wideWrap.appendChild(b);
+      return;
+    }
+    leftLane.appendChild(makeButton(t,'ឆ្វេងដៃ'));
+    rightLane.appendChild(makeButton(t,'ស្តាំដៃ'));
+  });
+}
+function makeButton(type, side){
+  const b = document.createElement('button');
+  b.className = 'defect';
+  b.disabled = true;
+  b.dataset.type = type.id;
+  b.dataset.side = side;
+  b.innerHTML = `${ICONS[type.id]}<span>${type.label}</span>`;
+  if(type.range) b.innerHTML = `${ICONS[type.id]}<span class="lbl-wrap"><span>${type.label}</span><span class="range-status"></span></span>`;
+  b.addEventListener('click', ()=> handleTap(type, side));
+  return b;
+}
+
+/* ---------- Distance math ---------- */
+function haversine(lat1, lon1, lat2, lon2){
+  const R = 6371000;
+  const toRad = d => d * Math.PI/180;
+  const dLat = toRad(lat2-lat1);
+  const dLon = toRad(lon2-lon1);
+  const a = Math.sin(dLat/2)**2 + Math.cos(toRad(lat1))*Math.cos(toRad(lat2))*Math.sin(dLon/2)**2;
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+}
+/**
+ * Converts lat/lon to local flat-plane metres around a reference point.
+ * Accurate enough at the segment lengths (metres) and journey scales
+ * (single-digit km) this app deals with — used so the nearest-point-on-path
+ * projection below is plain 2D geometry instead of spherical trig.
+ */
+function toLocalXY(lat, lon, lat0, lon0){
+  const R = 6371000;
+  const rad = Math.PI / 180;
+  return {
+    x: (lon - lon0) * rad * Math.cos(lat0 * rad) * R,
+    y: (lat - lat0) * rad * R
+  };
+}
+
+/* ---------- Geolocation ---------- */
+function startTracking(){
+  if(!('geolocation' in navigator)){
+    els.gpsBanner.classList.add('show');
+    return;
+  }
+  watchId = navigator.geolocation.watchPosition(onPosition, onGeoError, {
+    enableHighAccuracy:true, maximumAge:1000, timeout:10000
+  });
+}
+function stopTracking(){
+  if(watchId !== null){ navigator.geolocation.clearWatch(watchId); watchId = null; }
+}
+function onPosition(pos){
+  els.gpsBanner.classList.remove('show');
+  const {latitude, longitude, accuracy} = pos.coords;
+  state.lastLat = latitude; state.lastLon = longitude;
+
+  if(accuracy !== null && accuracy > 30) return; // ignore poor fixes
+
+  if(!state.path || state.path.length === 0){
+    state.path = [{lat:latitude, lon:longitude, cum:0}];
+    state.maxReached = 0;
+    state.totalDistance = 0;
+    persist();
+    return;
+  }
+
+  // Work in a local flat-plane (metres) around the journey's first point —
+  // plain 2D geometry from here on, accurate enough at these distances.
+  const lat0 = state.path[0].lat, lon0 = state.path[0].lon;
+  const cur = toLocalXY(latitude, longitude, lat0, lon0);
+
+  // Find the nearest point on the *recorded* path so far (perpendicular
+  // projection onto every segment), and the chainage at that projection.
+  let bestDist = Infinity, bestArc = 0;
+  for(let i = 0; i < state.path.length - 1; i++){
+    const p1 = toLocalXY(state.path[i].lat, state.path[i].lon, lat0, lon0);
+    const p2 = toLocalXY(state.path[i+1].lat, state.path[i+1].lon, lat0, lon0);
+    const vx = p2.x - p1.x, vy = p2.y - p1.y;
+    const wx = cur.x - p1.x, wy = cur.y - p1.y;
+    const vlen2 = vx*vx + vy*vy;
+    let t = vlen2 > 0 ? (wx*vx + wy*vy) / vlen2 : 0;
+    t = Math.max(0, Math.min(1, t));
+    const projX = p1.x + t*vx, projY = p1.y + t*vy;
+    const dx = cur.x - projX, dy = cur.y - projY;
+    const dist = Math.sqrt(dx*dx + dy*dy);
+    if(dist < bestDist){
+      bestDist = dist;
+      bestArc = state.path[i].cum + t * (state.path[i+1].cum - state.path[i].cum);
+    }
+  }
+
+  const last = state.path[state.path.length - 1];
+  const lastXY = toLocalXY(last.lat, last.lon, lat0, lon0);
+  const dFrontier = Math.hypot(cur.x - lastXY.x, cur.y - lastXY.y);
+
+  const FRONTIER_EPS = 5; // metres of slack for calling something "at the frontier"
+  if(state.maxReached - bestArc < FRONTIER_EPS && dFrontier > 0.5){
+    // Genuinely new ground beyond anything recorded yet — extend the path.
+    state.maxReached += dFrontier;
+    state.path.push({lat:latitude, lon:longitude, cum: state.maxReached});
+    state.totalDistance = state.maxReached;
+  } else {
+    // On (or behind) ground already recorded — snap to that point on the
+    // path instead of extending it. This is what makes the chainage drop
+    // back down while reversing, and not double-count when driving forward
+    // over the same stretch again, on a road that curves or not.
+    state.totalDistance = bestArc;
+  }
+
+  renderDistance();
+  persist();
+}
+function onGeoError(err){
+  els.gpsBanner.textContent = 'Location error: ' + err.message + '. Check Settings → Privacy → Location Services.';
+  els.gpsBanner.classList.add('show');
+}
+
+/* ---------- Rendering ---------- */
+function formatChainage(meters){
+  meters = Math.max(0, meters);
+  let km = Math.floor(meters / 1000);
+  let rem = Math.round(meters - km * 1000);
+  if(rem >= 1000){ km += 1; rem -= 1000; }
+  return km + '+' + String(rem).padStart(3, '0');
+}
+/** Parses "60+000", "60+0", or plain metres like "60000" into metres. */
+function parseChainage(str){
+  str = (str || '').trim();
+  if(!str) return 0;
+  if(str.includes('+')){
+    const parts = str.split('+');
+    const km = parseFloat(parts[0]) || 0;
+    const m = parseFloat(parts[1]) || 0;
+    return Math.max(0, km * 1000 + m);
+  }
+  const v = parseFloat(str);
+  return isNaN(v) ? 0 : Math.max(0, v);
+}
+/** Chainage shown/recorded after travelling `traveled` metres from the start point. */
+function chainageAt(traveled){
+  return Math.max(0, state.startChainage + state.direction * traveled);
+}
+function renderDistance(){
+  els.distanceVal.textContent = formatChainage(chainageAt(state.totalDistance));
+}
+function formatDistance(m){
+  return formatChainage(m);
+}
+function formatDuration(ms){
+  const s = Math.floor(ms/1000);
+  const h = Math.floor(s/3600), m = Math.floor((s%3600)/60), sec = s%60;
+  if(h>0) return `${h}h ${m}m`;
+  if(m>0) return `${m}m ${sec}s`;
+  return `${sec}s`;
+}
+function setActiveUI(active){
+  document.querySelectorAll('button.defect').forEach(b=> b.disabled = !active);
+  els.captureBtn.disabled = !active;
+  els.bridgeBtn.disabled = !active;
+  els.undoBtn.disabled = !active || !findLastEntry();
+  els.setupRow.classList.toggle('hidden', active);
+  els.roadRow.classList.toggle('hidden', active);
+  els.roadNameDisplay.textContent = active ? (state.roadName || '') : '';
+  document.body.classList.toggle('surveying', active);
+  els.statusDot.classList.toggle('live', active);
+  els.statusText.textContent = active ? 'កំពុងតាមដាន…' : 'មិនទាន់ចាប់ផ្តើម';
+  els.toggleBtn.textContent = active ? 'បញ្ចប់' : 'ចាប់ផ្តើម';
+  els.toggleBtn.classList.toggle('btn-start', !active);
+  els.toggleBtn.classList.toggle('btn-end', active);
+}
+function updateMarkCount(){
+  const m = state.points.length, p = state.photos.length;
+  els.markCount.textContent = `${m} ${m===1?'mark':'marks'} · ${p} ${p===1?'photo':'photos'}`;
+  if(els.undoBtn) els.undoBtn.disabled = !state.active || !findLastEntry();
+  renderRangeButtons();
+}
+
+/* ---------- Undo (removes the most recent mark, photo or bridge) ---------- */
+function findLastEntry(){
+  let last = null;
+  const lists = [['points', state.points], ['photos', state.photos], ['bridges', state.bridges]];
+  Object.entries(state.openRanges || {}).forEach(([key, open])=>{
+    const t = Date.parse(open.timestamp) || 0;
+    if(!last || t >= last.time) last = { kind:'open', key, time:t, item:{ distance: open.start } };
+  });
+  lists.forEach(([kind, arr])=>{
+    (arr || []).forEach((item, index)=>{
+      const t = Date.parse(item.timestamp) || 0;
+      if(!last || t >= last.time) last = { kind, index, time:t, item };
+    });
+  });
+  return last;
+}
+function undoLast(){
+  if(!state.active) return;
+  const last = findLastEntry();
+  if(!last){ showToast('គ្មានអ្វីសម្រាប់លុបទេ'); return; }
+  if(last.kind === 'open'){
+    const open = state.openRanges[last.key];
+    const t = TYPES.find(x => x.id === ((open && open.typeId) || last.key.split('|')[0]));
+    const sideTxt = open && open.side && open.side !== SIDE_BOTH ? open.side + ' • ' : '';
+    delete state.openRanges[last.key];
+    updateMarkCount();
+    showToast(`បានបោះបង់ ${sideTxt}${t ? t.label : ''} ចាប់ពី ${formatChainage(last.item.distance)}`);
+    if(navigator.vibrate) navigator.vibrate([10, 40, 10]);
+    persist();
+    return;
+  }
+  state[last.kind].splice(last.index, 1);
+  const at = formatChainage(last.item.distance);
+  let what;
+  if(last.kind === 'points') what = last.item.endDistance != null ? `${last.item.side} • ${last.item.label} ${formatRange(last.item)}` : `${last.item.side} • ${last.item.label}`;
+  else if(last.kind === 'photos') what = 'រូបភាព';
+  else what = `ស្ពាន "${last.item.name}"`;
+  updateMarkCount();
+  showToast(`បានលុប ${what} at ${at}`);
+  if(navigator.vibrate) navigator.vibrate([10, 40, 10]);
+  persist();
+}
+
+/* ---------- Toast ---------- */
+let toastTimer;
+function showToast(msg){
+  els.toast.textContent = msg;
+  els.toast.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(()=> els.toast.classList.remove('show'), 2000);
+}
+
+/* ---------- Logging marks ---------- */
+let pendingSide = null, pendingType = null;
+function handleTap(type, side){
+  if(type.range){ toggleRange(type, side); return; }
+  if(type.id === 'other'){
+    pendingSide = side; pendingType = type;
+    els.sheetNote.value = '';
+    els.sheetBackdrop.classList.add('show');
+    setTimeout(()=> els.sheetNote.focus(), 150);
+  } else {
+    addPoint(type, side, '');
+  }
+}
+function addPoint(type, side, note){
+  const point = {
+    distance: chainageAt(state.totalDistance),
+    type: type.id,
+    label: type.label,
+    side, note,
+    timestamp: new Date().toISOString(),
+    lat: state.lastLat, lon: state.lastLon
+  };
+  state.points.push(point);
+  updateMarkCount();
+  showToast(`${side} • ${type.label} at ${formatDistance(point.distance)}`);
+  if(navigator.vibrate) navigator.vibrate(15);
+  persist();
+}
+
+/* ---------- Range marks (tap = start, tap again = stop) ---------- */
+function formatLength(m){
+  m = Math.round(Math.abs(m));
+  return m >= 1000 ? (m/1000).toFixed(2) + ' km' : m + ' m';
+}
+function formatRange(p){
+  return `${formatChainage(p.distance)} – ${formatChainage(p.endDistance)}`;
+}
+function rangeKey(typeId, side){ return typeId + '|' + side; }
+function toggleRange(type, side){
+  if(!state.openRanges) state.openRanges = {};
+  const key = rangeKey(type.id, side);
+  const here = chainageAt(state.totalDistance);
+  if(!state.openRanges[key]){
+    state.openRanges[key] = {
+      typeId: type.id, side, start: here, timestamp: new Date().toISOString(),
+      lat: state.lastLat, lon: state.lastLon
+    };
+    const who = side === SIDE_BOTH ? type.label : `${side} • ${type.label}`;
+    showToast(`${who} ចាប់ផ្តើម ${formatChainage(here)}`);
+    if(navigator.vibrate) navigator.vibrate(15);
+  } else {
+    closeRange(key, here);
+  }
+  updateMarkCount();
+  persist();
+}
+function closeRange(key, endChainage){
+  const open = state.openRanges[key];
+  if(!open) return;
+  const typeId = open.typeId || key.split('|')[0];
+  const side = open.side || SIDE_BOTH;
+  const type = TYPES.find(x => x.id === typeId);
+  const point = {
+    distance: Math.min(open.start, endChainage),
+    endDistance: Math.max(open.start, endChainage),
+    type: typeId, label: type ? type.label : typeId,
+    side, note: '',
+    timestamp: new Date().toISOString(),
+    startTimestamp: open.timestamp,
+    lat: open.lat, lon: open.lon,
+    endLat: state.lastLat, endLon: state.lastLon
+  };
+  state.points.push(point);
+  delete state.openRanges[key];
+  const who = side === SIDE_BOTH ? point.label : `${side} • ${point.label}`;
+  showToast(`${who} ${formatRange(point)} (${formatLength(point.endDistance - point.distance)})`);
+  if(navigator.vibrate) navigator.vibrate([15, 60, 15]);
+}
+function renderRangeButtons(){
+  document.querySelectorAll('button.defect').forEach(b=>{
+    const st = b.querySelector('.range-status');
+    if(!st) return;
+    const open = state.openRanges && (state.openRanges[rangeKey(b.dataset.type, b.dataset.side)] ||
+      (b.dataset.side === SIDE_BOTH ? state.openRanges[b.dataset.type] : null));
+    b.classList.toggle('recording', !!open);
+    if(!open){ st.textContent = ''; return; }
+    st.textContent = b.classList.contains('wide')
+      ? `ចាប់ពី ${formatChainage(open.start)} • ចុចម្តងទៀតដើម្បីបញ្ឈប់`
+      : `ចាប់ពី ${formatChainage(open.start)}`;
+  });
+}
+
+els.sheetCancel.addEventListener('click', ()=> els.sheetBackdrop.classList.remove('show'));
+els.sheetAdd.addEventListener('click', ()=>{
+  addPoint(pendingType, pendingSide, els.sheetNote.value.trim());
+  els.sheetBackdrop.classList.remove('show');
+});
+
+/* ---------- Photo capture ---------- */
+els.captureBtn.addEventListener('click', ()=> els.cameraInput.click());
+els.cameraInput.addEventListener('change', (e)=>{
+  const file = e.target.files[0];
+  e.target.value = ''; // reset so the same shot can be retaken later
+  if(!file) return;
+  showToast('Processing photo…');
+  resizeImageToDataUrl(file, 1600, 0.75).then((dataUrl)=>{
+    const photo = {
+      distance: chainageAt(state.totalDistance),
+      dataUrl,
+      timestamp: new Date().toISOString(),
+      lat: state.lastLat, lon: state.lastLon
+    };
+    state.photos.push(photo);
+    updateMarkCount();
+    showToast(`Photo captured at ${formatChainage(photo.distance)}`);
+    if(navigator.vibrate) navigator.vibrate(15);
+    persist();
+  }).catch(()=>{
+    showToast('Could not process that photo');
+  });
+});
+
+/**
+ * Downscales a captured photo before storing it. Raw iPhone camera shots are
+ * often 3-12MB each — storing those uncompressed fills localStorage's quota
+ * (~5-10MB total) after just one or two shots and silently drops data. This
+ * keeps each photo to roughly 150-400KB while staying clearly legible.
+ */
+function resizeImageToDataUrl(file, maxDim, quality){
+  return new Promise((resolve, reject)=>{
+    const reader = new FileReader();
+    reader.onerror = () => reject(reader.error);
+    reader.onload = () => {
+      const img = new Image();
+      img.onerror = reject;
+      img.onload = () => {
+        let { width, height } = img;
+        if (width > height && width > maxDim) {
+          height = Math.round(height * (maxDim / width));
+          width = maxDim;
+        } else if (height >= width && height > maxDim) {
+          width = Math.round(width * (maxDim / height));
+          height = maxDim;
+        }
+        const canvas = document.createElement('canvas');
+        canvas.width = width;
+        canvas.height = height;
+        canvas.getContext('2d').drawImage(img, 0, 0, width, height);
+        resolve(canvas.toDataURL('image/jpeg', quality));
+      };
+      img.src = reader.result;
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
+/* ---------- Bridge / structure marking ---------- */
+els.undoBtn.addEventListener('click', undoLast);
+els.bridgeBtn.addEventListener('click', ()=>{
+  els.bridgeNameInput.value = '';
+  els.bridgeSheetBackdrop.classList.add('show');
+  setTimeout(()=> els.bridgeNameInput.focus(), 150);
+});
+els.bridgeSheetCancel.addEventListener('click', ()=> els.bridgeSheetBackdrop.classList.remove('show'));
+els.bridgeSheetAdd.addEventListener('click', ()=>{
+  const name = els.bridgeNameInput.value.trim();
+  if(!name){
+    els.bridgeNameInput.focus();
+    return;
+  }
+  addBridge(name);
+  els.bridgeSheetBackdrop.classList.remove('show');
+});
+function addBridge(name){
+  const bridge = {
+    distance: chainageAt(state.totalDistance),
+    name,
+    timestamp: new Date().toISOString(),
+    lat: state.lastLat, lon: state.lastLon
+  };
+  state.bridges.push(bridge);
+  updateMarkCount();
+  showToast(`Bridge "${bridge.name}" marked at ${formatChainage(bridge.distance)}`);
+  if(navigator.vibrate) navigator.vibrate(15);
+  persist();
+}
+
+/* ---------- Start / End journey ---------- */
+/* ---------- Journey setup (start point + direction) ---------- */
+let setupDirection = 1;
+els.dirToggle.addEventListener('click', ()=>{
+  setupDirection = -setupDirection;
+  els.dirToggle.innerHTML = setupDirection === 1 ? 'ទិសផ្ទាល់ ↑' : 'ទិសបញ្ច្រាស ↓';
+  els.dirToggle.classList.toggle('reverse', setupDirection === -1);
+});
+els.roadNameInput.addEventListener('input', ()=> els.roadNameInput.parentElement.classList.remove('invalid'));
+try{ els.roadNameInput.value = localStorage.getItem('roadInspectionLastRoad') || ''; }catch(e){}
+function roadLabel(){ return (state.roadName || '').trim(); }
+function roadFileTag(){
+  const r = roadLabel().replace(/[\/:*?"<>|]+/g, '').replace(/\s+/g, '-');
+  return r ? r + '-' : '';
+}
+els.startChainageInput.addEventListener('input', ()=>{
+  if(!state.active){
+    els.distanceVal.textContent = formatChainage(parseChainage(els.startChainageInput.value));
+  }
+});
+
+els.toggleBtn.addEventListener('click', ()=>{
+  if(!state.active){
+    const roadName = els.roadNameInput.value.trim();
+    if(!roadName){
+      els.roadNameInput.parentElement.classList.add('invalid');
+      els.roadNameInput.focus();
+      showToast('សូមបញ្ចូលឈ្មោះផ្លូវ');
+      return;
+    }
+    try{ localStorage.setItem('roadInspectionLastRoad', roadName); }catch(e){}
+    const startChainage = parseChainage(els.startChainageInput.value);
+    state = {active:true, roadName, startTime:Date.now(), endTime:null, totalDistance:0,
+             startChainage, direction:setupDirection,
+             points:[], photos:[], bridges:[], openRanges:{}, path:[], maxReached:0, lastLat:null, lastLon:null};
+    renderDistance(); updateMarkCount(); setActiveUI(true);
+    startTracking();
+    persist();
+  } else {
+    // Close any range still recording at the current chainage
+    Object.keys(state.openRanges || {}).forEach(key=>{
+      closeRange(key, chainageAt(state.totalDistance));
+    });
+    state.active = false;
+    state.endTime = Date.now();
+    stopTracking();
+
+    // If surveyed in reverse, flip the dataset so the report always reads
+    // from low chainage to high, and left↔right sides are swapped to match
+    // what was physically on each side of the road in the forward direction.
+    if(state.direction === -1){
+      state.points = state.points
+        .map(p => ({ ...p, side: p.side === 'ឆ្វេងដៃ' ? 'ស្តាំដៃ' : (p.side === 'ស្តាំដៃ' ? 'ឆ្វេងដៃ' : p.side) }))
+        .sort((a, b) => a.distance - b.distance);
+      state.photos = [...state.photos].sort((a, b) => a.distance - b.distance);
+      state.bridges = [...state.bridges].sort((a, b) => a.distance - b.distance);
+      // Treat journey as if it were driven forward from the low point
+      state.startChainage = Math.min(state.startChainage, chainageAt(state.totalDistance));
+      state.direction = 1;
+    }
+
+    setActiveUI(false);
+    persist();
+    showSummary();
+  }
+});
+
+/* ---------- Summary screen ---------- */
+/* ---------- Horizontal bar chart (used in-app and embedded in the PDF) ---------- */
+function getTypeStats(){
+  return TYPES.filter(t => !t.wide).map(t => ({
+    label: t.label,
+    left: state.points.filter(p => p.type === t.id && p.side === 'ឆ្វេងដៃ').length,
+    right: state.points.filter(p => p.type === t.id && p.side === 'ស្តាំដៃ').length
+  }));
+}
+
+/**
+ * Draws a horizontal grouped bar chart (Left vs Right per defect type) onto
+ * an offscreen canvas and returns a PNG data URL. `dark` switches between
+ * the app's dark theme (in-app preview) and a white background (PDF page).
+ */
+function buildBarChartImage(typeStats, { dark = false } = {}){
+  const scale = 2; // render at 2x for crisp PNG embedding
+  const W = 680, rowH = 46, padTop = 36, padLeft = 150, padRight = 50;
+  const H = padTop + typeStats.length * rowH + 30;
+
+  const canvas = document.createElement('canvas');
+  canvas.width = W * scale;
+  canvas.height = H * scale;
+  const ctx = canvas.getContext('2d');
+  ctx.scale(scale, scale);
+
+  const bg = dark ? '#262931' : '#ffffff';
+  const ink = dark ? '#F4F1EA' : '#1C1E22';
+  const muted = dark ? '#9AA1AC' : '#555a63';
+  const leftColor = '#1C84C6';
+  const rightColor = '#C0562F';
+
+  ctx.fillStyle = bg;
+  ctx.fillRect(0, 0, W, H);
+
+  ctx.fillStyle = ink;
+  ctx.font = '600 14px "Kantumruy Pro", Arial, sans-serif';
+  ctx.textAlign = 'left';
+  ctx.fillText('ចំណុចតាមប្រភេទ — ឆ្វេងដៃ និង ស្តាំដៃ', 16, 22);
+
+  const maxVal = Math.max(1, ...typeStats.flatMap(t => [t.left, t.right]));
+  const chartW = W - padLeft - padRight;
+  const barH = 13, gap = 5;
+
+  typeStats.forEach((t, i) => {
+    const y = padTop + i * rowH;
+
+    ctx.fillStyle = ink;
+    ctx.font = '600 12px "Kantumruy Pro", Arial, sans-serif';
+    ctx.textAlign = 'right';
+    ctx.fillText(t.label, padLeft - 10, y + rowH / 2 + 4);
+
+    ctx.textAlign = 'left';
+    const leftW = (t.left / maxVal) * chartW;
+    ctx.fillStyle = leftColor;
+    ctx.fillRect(padLeft, y + 4, Math.max(leftW, t.left > 0 ? 2 : 0), barH);
+    ctx.fillStyle = muted;
+    ctx.font = '11px "Kantumruy Pro", Arial, sans-serif';
+    ctx.fillText(String(t.left), padLeft + leftW + 6, y + 4 + barH - 2);
+
+    const rightW = (t.right / maxVal) * chartW;
+    ctx.fillStyle = rightColor;
+    ctx.fillRect(padLeft, y + 4 + barH + gap, Math.max(rightW, t.right > 0 ? 2 : 0), barH);
+    ctx.fillStyle = muted;
+    ctx.fillText(String(t.right), padLeft + rightW + 6, y + 4 + barH + gap + barH - 2);
+  });
+
+  const legendY = H - 16;
+  ctx.fillStyle = leftColor;
+  ctx.fillRect(padLeft, legendY - 9, 10, 10);
+  ctx.fillStyle = ink;
+  ctx.font = '11px "Kantumruy Pro", Arial, sans-serif';
+  ctx.fillText('ឆ្វេងដៃ', padLeft + 16, legendY);
+  ctx.fillStyle = rightColor;
+  ctx.fillRect(padLeft + 60, legendY - 9, 10, 10);
+  ctx.fillStyle = ink;
+  ctx.fillText('ស្តាំដៃ', padLeft + 76, legendY);
+
+  return { dataUrl: canvas.toDataURL('image/png'), width: W, height: H };
+}
+
+/* ---------- Route condition strip chart (Good / Medium / Bad) ---------- */
+function classifyCount(count){
+  if(count === 0) return {cls:'good', fill:'#FFFFFF'};
+  if(count <= 2) return {cls:'medium', fill:'#FAB469'};
+  return {cls:'bad', fill:'#E31E24'};
+}
+
+/**
+ * Splits the journey into fixed windows (default 200m), counts qualifying
+ * defects (Pothole, Big Damage, Shoulder) per window, classifies each as
+ * Good/Medium/Bad, then merges consecutive same-class windows into the
+ * variable-length segments that get drawn on the strip chart.
+ */
+/** The journey's chainage span: lo→hi regardless of travel direction. */
+function journeyRange(){
+  const a = state.startChainage;
+  const b = chainageAt(state.totalDistance);
+  return { lo: Math.min(a, b), hi: Math.max(a, b) };
+}
+
+function computeRouteSegments(windowM = 200){
+  const { lo, hi } = journeyRange();
+  const total = Math.max(hi - lo, 1);
+  const nWindows = Math.max(1, Math.ceil(total / windowM));
+  const counts = new Array(nWindows).fill(0);
+  state.points.forEach(p=>{
+    if(SCORING_TYPES.has(p.type)){
+      const idxOf = d => Math.min(Math.max(0, Math.floor((d - lo) / windowM)), nWindows - 1);
+      const i0 = idxOf(p.distance);
+      const i1 = p.endDistance != null ? idxOf(Math.max(p.distance, p.endDistance - 0.001)) : i0;
+      for(let k = i0; k <= i1; k++) counts[k]++;
+    }
+  });
+
+  const windows = counts.map((c, i)=>{
+    const start = lo + i * windowM;
+    const end = Math.min(lo + (i + 1) * windowM, hi);
+    const { cls, fill } = classifyCount(c);
+    return { start, end, cls, fill, count: c };
+  });
+
+  const segments = [{ ...windows[0] }];
+  for(let i = 1; i < windows.length; i++){
+    const w = windows[i];
+    const cur = segments[segments.length - 1];
+    if(w.cls === cur.cls){
+      cur.end = w.end;
+      cur.count += w.count;
+    } else {
+      segments.push({ ...w });
+    }
+  }
+  return segments;
+}
+
+/**
+ * Draws one horizontal row of the strip chart: the condition-coloured
+ * strip, chainage tick marks + rotated labels, red segment-length callouts,
+ * and bridge hatch markers. Shared by the single-row in-app preview and the
+ * multi-row PDF export.
+ */
+function drawRouteRow(ctx, x0, x1, yStrip, stripH, rowStart, rowEnd, segments, bridges, labelTop){
+  const span = (rowEnd - rowStart) || 1;
+  const xpos = (chainage) => x0 + (chainage - rowStart) / span * (x1 - x0);
+  const INK = '#1C1E22', MUTED2 = '#9aa1ac', REDLBL = '#cc1f1f', HATCH = '#82c3e6';
+
+  ctx.fillStyle = '#ffffff';
+  ctx.fillRect(x0, yStrip, x1 - x0, stripH);
+
+  segments.forEach(seg=>{
+    if(seg.end <= rowStart || seg.start >= rowEnd || seg.fill === '#FFFFFF') return;
+    const cs = Math.max(seg.start, rowStart), ce = Math.min(seg.end, rowEnd);
+    ctx.fillStyle = seg.fill;
+    ctx.fillRect(xpos(cs), yStrip, Math.max(xpos(ce) - xpos(cs), 0), stripH);
+  });
+  ctx.strokeStyle = INK; ctx.lineWidth = 1.5;
+  ctx.strokeRect(x0, yStrip, x1 - x0, stripH);
+
+  const bridgeChainage = new Set(bridges.map(b => b.distance));
+  const breakpoints = new Set([rowStart, rowEnd]);
+  segments.forEach(seg=>{
+    if(seg.start >= rowStart && seg.start <= rowEnd) breakpoints.add(seg.start);
+    if(seg.end >= rowStart && seg.end <= rowEnd) breakpoints.add(seg.end);
+  });
+  bridges.forEach(b=>{ if(b.distance >= rowStart && b.distance <= rowEnd) breakpoints.add(b.distance); });
+  const sortedBp = [...breakpoints].sort((a,b)=>a-b);
+
+  sortedBp.forEach(bp=>{
+    const xp = xpos(bp);
+    ctx.strokeStyle = MUTED2; ctx.lineWidth = 0.75;
+    ctx.beginPath(); ctx.moveTo(xp, yStrip - 10); ctx.lineTo(xp, yStrip + stripH + 6); ctx.stroke();
+    if(bridgeChainage.has(bp)) return; // the bridge caption below already labels this tick
+    ctx.save();
+    ctx.translate(xp, labelTop + 46);
+    ctx.rotate(-60 * Math.PI / 180);
+    ctx.fillStyle = INK; ctx.font = '600 10px "Kantumruy Pro", Arial'; ctx.textAlign = 'left';
+    ctx.fillText(formatChainage(bp), 0, 0);
+    ctx.restore();
+  });
+
+  for(let i = 0; i < sortedBp.length - 1; i++){
+    const a = sortedBp[i], b = sortedBp[i+1];
+    const length = Math.round(b - a);
+    if(length <= 0) continue;
+    const mid = (xpos(a) + xpos(b)) / 2;
+    ctx.fillStyle = REDLBL; ctx.font = '600 10px "Kantumruy Pro", Arial'; ctx.textAlign = 'center';
+    ctx.fillText(String(length), mid, yStrip - 20);
+  }
+
+  bridges.forEach(b=>{
+    if(b.distance < rowStart || b.distance > rowEnd) return;
+    const xp = xpos(b.distance);
+    const bw = 10, by0 = yStrip - 5, bh = stripH + 10;
+    ctx.save();
+    ctx.beginPath(); ctx.rect(xp - bw/2, by0, bw, bh); ctx.clip();
+    ctx.fillStyle = '#ffffff'; ctx.fillRect(xp - bw/2, by0, bw, bh);
+    ctx.strokeStyle = HATCH; ctx.lineWidth = 1.4;
+    for(let k = -6; k < 14; k++){
+      ctx.beginPath();
+      ctx.moveTo(xp - bw/2 + k*4, by0 + bh);
+      ctx.lineTo(xp - bw/2 + k*4 + bh, by0);
+      ctx.stroke();
+    }
+    ctx.restore();
+    ctx.strokeStyle = INK; ctx.lineWidth = 1.2;
+    ctx.strokeRect(xp - bw/2, by0, bw, bh);
+    ctx.beginPath(); ctx.moveTo(xp, by0); ctx.lineTo(xp, by0 - 34); ctx.stroke();
+    ctx.fillStyle = INK; ctx.font = '600 9px "Kantumruy Pro", Arial'; ctx.textAlign = 'center';
+    const label = b.name.length > 20 ? b.name.slice(0, 19) + '\u2026' : b.name;
+    ctx.fillText(`${formatChainage(b.distance)} \u2014 ${label}`, xp, by0 - 38);
+  });
+}
+
+/**
+ * Builds the full strip chart image: `rowLengthM` controls how much
+ * chainage fits per row (one tall row for the in-app preview, several
+ * shorter rows for the printable PDF), and the canvas grows automatically
+ * to fit however many rows that needs.
+ */
+function buildRouteStripImage(segments, bridges, rangeLo, rangeHi, opts = {}){
+  const totalSpan = Math.max(rangeHi - rangeLo, 1);
+  const rowLengthM = opts.rowLengthM || totalSpan;
+  const pxPerMeter = opts.pxPerMeter || Math.min(0.6, Math.max(0.05, 1600 / rowLengthM));
+  const rowWidthPx = Math.max(320, rowLengthM * pxPerMeter);
+  const nRows = Math.max(1, Math.ceil(totalSpan / rowLengthM));
+  const stripH = 50, topPad = 92, rowGap = 58, bottomPad = 14, marginX = 28;
+  const scale = 2;
+  const W = Math.ceil(rowWidthPx) + marginX * 2;
+  const H = topPad + nRows * stripH + (nRows - 1) * rowGap + bottomPad;
+
+  const canvas = document.createElement('canvas');
+  canvas.width = W * scale; canvas.height = H * scale;
+  const ctx = canvas.getContext('2d');
+  ctx.scale(scale, scale);
+  ctx.fillStyle = '#ffffff'; ctx.fillRect(0, 0, W, H);
+
+  ctx.fillStyle = '#1C1E22'; ctx.font = '600 13px "Kantumruy Pro", Arial'; ctx.textAlign = 'left';
+  ctx.fillText(`Route Condition \u2014 ${formatChainage(rangeLo)} to ${formatChainage(rangeHi)}`, 14, 20);
+
+  let lx = 14, ly = 36;
+  function legendSwatch(fill, label, hatch){
+    if(hatch){
+      ctx.save();
+      ctx.beginPath(); ctx.rect(lx, ly, 16, 14); ctx.clip();
+      ctx.fillStyle = '#ffffff'; ctx.fillRect(lx, ly, 16, 14);
+      ctx.strokeStyle = '#82c3e6'; ctx.lineWidth = 1;
+      for(let k = -6; k < 8; k++){
+        ctx.beginPath();
+        ctx.moveTo(lx + k*5, ly + 14);
+        ctx.lineTo(lx + k*5 + 14, ly);
+        ctx.stroke();
+      }
+      ctx.restore();
+    } else {
+      ctx.fillStyle = fill;
+      ctx.fillRect(lx, ly, 16, 14);
+    }
+    ctx.strokeStyle = '#1C1E22'; ctx.lineWidth = 1;
+    ctx.strokeRect(lx, ly, 16, 14);
+    ctx.fillStyle = '#1C1E22'; ctx.font = '11px "Kantumruy Pro", Arial'; ctx.textAlign = 'left';
+    ctx.fillText(label, lx + 22, ly + 11);
+    lx += 22 + ctx.measureText(label).width + 16;
+  }
+  legendSwatch('#ffffff', 'Good');
+  legendSwatch('#FAB469', 'Medium');
+  legendSwatch('#E31E24', 'Bad');
+  legendSwatch(null, 'Bridge', true);
+
+  for(let r = 0; r < nRows; r++){
+    const rowStart = rangeLo + r * rowLengthM;
+    const rowEnd = Math.min(rangeLo + (r + 1) * rowLengthM, rangeHi);
+    const y = topPad + r * (stripH + rowGap);
+    drawRouteRow(ctx, marginX, W - marginX, y, stripH, rowStart, rowEnd, segments, bridges, y - 64);
+  }
+
+  return { dataUrl: canvas.toDataURL('image/png'), width: W, height: H };
+}
+
+function showSummary(){
+  document.getElementById('sumRoad').textContent = roadLabel() || '—';
+  document.querySelector('.sum-header h1').innerHTML = roadLabel()
+    ? `របាយការណ៍ត្រួតពិនិត្យ<small>${escapeHtml(roadLabel())}</small>` : 'របាយការណ៍ត្រួតពិនិត្យ';
+  document.getElementById('sumFrom').textContent = formatChainage(state.startChainage);
+  document.getElementById('sumTo').textContent = formatChainage(chainageAt(state.totalDistance));
+  document.getElementById('sumDirection').textContent = state.direction === -1 ? 'ទិសបញ្ច្រាស (ចុង → ដើម)' : 'ទិសផ្ទាល់ (ដើម → ចុង)';
+  document.getElementById('sumDistance').textContent = formatDistance(state.totalDistance);
+  document.getElementById('sumDuration').textContent = formatDuration((state.endTime||Date.now()) - state.startTime);
+  document.getElementById('sumCount').textContent = state.points.length;
+
+  const byType = document.getElementById('sumByType');
+  byType.innerHTML = '';
+  TYPES.forEach(t=>{
+    const count = state.points.filter(p=>p.type===t.id).length;
+    const row = document.createElement('div');
+    row.className = 'type-row';
+    row.innerHTML = `${ICONS[t.id]}<span>${t.label}</span><span class="cnt">${count}</span>`;
+    byType.appendChild(row);
+  });
+
+  const list = document.getElementById('sumList');
+  list.innerHTML = '';
+  if(state.points.length === 0){
+    list.innerHTML = '<div class="empty">No issues were logged on this journey.</div>';
+  } else {
+    [...state.points].sort((a,b)=>a.distance-b.distance).forEach(p=>{
+      const row = document.createElement('div');
+      row.className = 'mark-row';
+      row.innerHTML = `
+        <div class="mark-top">
+          ${ICONS[p.type]}
+          <span>${p.label}</span>
+          <span class="side-pill ${p.side === 'ឆ្វេងដៃ' ? 'left' : (p.side === 'ស្តាំដៃ' ? 'right' : 'both')}">${p.side === 'ឆ្វេងដៃ' ? 'ឆ្វេង' : (p.side === 'ស្តាំដៃ' ? 'ស្តាំ' : p.side)}</span>
+          <span class="mark-dist">${p.endDistance != null ? formatRange(p) + ' <span class="mark-len">(' + formatLength(p.endDistance - p.distance) + ')</span>' : formatChainage(p.distance)}</span>
+        </div>
+        ${p.note ? `<div class="mark-note">${escapeHtml(p.note)}</div>` : ''}
+      `;
+      list.appendChild(row);
+    });
+  }
+
+  const chart = buildBarChartImage(getTypeStats(), { dark: false });
+  els.typeChartImg.src = chart.dataUrl;
+
+  const routeSegments = computeRouteSegments();
+  const routeStrip = buildRouteStripImage(routeSegments, state.bridges, journeyRange().lo, journeyRange().hi, {
+    rowLengthM: Math.max(state.totalDistance, 1)
+  });
+  els.routeStripImg.src = routeStrip.dataUrl;
+  els.routeStripImg.style.width = routeStrip.width + 'px';
+
+  const condTotals = { good: 0, medium: 0, bad: 0 };
+  routeSegments.forEach(s => { condTotals[s.cls] += (s.end - s.start); });
+  const totalM = Math.max(state.totalDistance, 1);
+  els.routeStripStats.innerHTML = `
+    <span><b>${(condTotals.good / totalM * 100).toFixed(0)}%</b> good</span>
+    <span><b>${(condTotals.medium / totalM * 100).toFixed(0)}%</b> medium</span>
+    <span><b>${(condTotals.bad / totalM * 100).toFixed(0)}%</b> bad</span>
+    <span><b>${state.bridges.length}</b> bridge${state.bridges.length === 1 ? '' : 's'}</span>
+  `;
+
+  const photosWrap = els.sumPhotos;
+  photosWrap.innerHTML = '';
+  if(state.photos.length === 0){
+    photosWrap.innerHTML = '<div class="empty">No photos were captured on this journey.</div>';
+  } else {
+    const grid = document.createElement('div');
+    grid.className = 'photo-grid';
+    [...state.photos].sort((a,b)=>a.distance-b.distance).forEach(p=>{
+      const item = document.createElement('div');
+      item.className = 'photo-item';
+      item.innerHTML = `<img src="${p.dataUrl}" alt="Photo at ${formatChainage(p.distance)}"><span>${formatChainage(p.distance)}</span>`;
+      item.addEventListener('click', ()=> openLightbox(p));
+      grid.appendChild(item);
+    });
+    photosWrap.appendChild(grid);
+  }
+
+  els.main.classList.add('hidden');
+  els.summary.classList.add('show');
+}
+function openLightbox(photo){
+  els.lbImage.src = photo.dataUrl;
+  els.lbCaption.textContent = `គីឡូម៉ែត្រ ${formatChainage(photo.distance)} · ${new Date(photo.timestamp).toLocaleString()}`;
+  els.lightbox.classList.add('show');
+}
+els.lbClose.addEventListener('click', ()=> els.lightbox.classList.remove('show'));
+els.lightbox.addEventListener('click', (e)=>{ if(e.target === els.lightbox) els.lightbox.classList.remove('show'); });
+function escapeHtml(s){
+  const d = document.createElement('div'); d.textContent = s; return d.innerHTML;
+}
+els.backBtn.addEventListener('click', ()=>{
+  els.summary.classList.remove('show');
+  els.main.classList.remove('hidden');
+});
+els.newBtn.addEventListener('click', ()=>{
+  els.summary.classList.remove('show');
+  els.main.classList.remove('hidden');
+});
+
+/* ---------- CSV export ---------- */
+/* Khmer text drawn on a canvas, so it can be placed into a PDF as a picture */
+function buildTextImage(text, opts){
+  const o = opts || {};
+  const fontPx = o.fontPx || 34;
+  const scale = 2;
+  const font = `${o.bold ? '700 ' : ''}${fontPx}px "Kantumruy Pro", "Khmer OS Siemreap", "Noto Sans Khmer", system-ui, sans-serif`;
+  const measure = document.createElement('canvas').getContext('2d');
+  measure.font = font;
+  const w = Math.ceil(measure.measureText(text).width) + 8;
+  const h = Math.ceil(fontPx * 1.9);
+  const cv = document.createElement('canvas');
+  cv.width = Math.max(2, w) * scale;
+  cv.height = h * scale;
+  const ctx = cv.getContext('2d');
+  ctx.scale(scale, scale);
+  ctx.font = font;
+  ctx.fillStyle = o.color || '#111111';
+  ctx.textAlign = 'left';
+  ctx.textBaseline = 'middle';
+  ctx.fillText(text, 4, h / 2);
+  return { dataUrl: cv.toDataURL('image/png'), width: w, height: h };
+}
+
+const KHMER_RE = /[\u1780-\u17FF]/;
+// jsPDF's built-in fonts have no Khmer glyphs, so Khmer is drawn as a picture of text
+function pdfText(doc, text, x, y, opts){
+  const o = opts || {};
+  const size = o.size || 10;
+  const str = String(text == null ? '' : text);
+  if(!str) return 0;
+  if(!KHMER_RE.test(str)){
+    doc.setFont('helvetica', o.bold ? 'bold' : (o.italic ? 'italic' : 'normal'));
+    doc.setFontSize(size);
+    doc.setTextColor(20);
+    doc.text(str, x, y);
+    return doc.getTextWidth(str);
+  }
+  const img = buildTextImage(str, { fontPx: 40, bold: !!o.bold, color: o.colorHex || '#141414' });
+  let h = size * 1.45;
+  let w = h * (img.width / img.height);
+  if(o.maxW && w > o.maxW){ w = o.maxW; h = w * (img.height / img.width); }
+  doc.addImage(img.dataUrl, 'PNG', x, y - h * 0.78, w, h);
+  return w;
+}
+
+/* ---------- Word photo report (2 photos per row, 4 per page) ---------- */
+const KHMER_DIGITS = ['០','១','២','៣','៤','៥','៦','៧','៨','៩'];
+function toKhmerDigits(v){
+  return String(v).replace(/[0-9]/g, d => KHMER_DIGITS[+d]);
+}
+function chainageKhmer(metres){
+  return toKhmerDigits(formatChainage(metres));
+}
+function docxEscape(v){
+  return String(v == null ? '' : v)
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;').replace(/'/g, '&apos;');
+}
+function imageSizeOf(dataUrl){
+  return new Promise((resolve)=>{
+    const img = new Image();
+    img.onload = ()=> resolve({ w: img.naturalWidth || 3, h: img.naturalHeight || 4 });
+    img.onerror = ()=> resolve({ w: 3, h: 4 });
+    img.src = dataUrl;
+  });
+}
+// The template: A4, 2 columns, picture box 3.125in x 4.167in, caption centred under it.
+const DOCX_BOX_W = 2857500, DOCX_BOX_H = 3810000; // EMU
+function docxPictureXml(rid, cx, cy, picId){
+  return `<w:r><w:rPr><w:noProof/></w:rPr><w:drawing><wp:inline distT="0" distB="0" distL="0" distR="0">`
+    + `<wp:extent cx="${cx}" cy="${cy}"/><wp:effectExtent l="0" t="0" r="0" b="0"/>`
+    + `<wp:docPr id="${picId}" name="Picture ${picId}"/>`
+    + `<wp:cNvGraphicFramePr><a:graphicFrameLocks xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" noChangeAspect="1"/></wp:cNvGraphicFramePr>`
+    + `<a:graphic xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main"><a:graphicData uri="http://schemas.openxmlformats.org/drawingml/2006/picture">`
+    + `<pic:pic xmlns:pic="http://schemas.openxmlformats.org/drawingml/2006/picture"><pic:nvPicPr><pic:cNvPr id="0" name=""/><pic:cNvPicPr><a:picLocks noChangeAspect="1" noChangeArrowheads="1"/></pic:cNvPicPr></pic:nvPicPr>`
+    + `<pic:blipFill><a:blip r:embed="${rid}"/><a:srcRect/><a:stretch><a:fillRect/></a:stretch></pic:blipFill>`
+    + `<pic:spPr bwMode="auto"><a:xfrm><a:off x="0" y="0"/><a:ext cx="${cx}" cy="${cy}"/></a:xfrm><a:prstGeom prst="rect"><a:avLst/></a:prstGeom></pic:spPr>`
+    + `</pic:pic></a:graphicData></a:graphic></wp:inline></w:drawing></w:r>`;
+}
+function docxCell(cellXml){
+  const noBorder = ['top','left','bottom','right']
+    .map(side => `<w:${side} w:val="none" w:sz="0" w:space="0" w:color="FFFFFF"/>`).join('');
+  return `<w:tc><w:tcPr><w:tcW w:w="4870" w:type="dxa"/><w:tcBorders>${noBorder}</w:tcBorders>`
+    + `<w:tcMar><w:top w:w="80" w:type="dxa"/><w:left w:w="80" w:type="dxa"/><w:bottom w:w="80" w:type="dxa"/><w:right w:w="80" w:type="dxa"/></w:tcMar></w:tcPr>`
+    + cellXml + `</w:tc>`;
+}
+function docxCaption(text){
+  return `<w:p><w:pPr><w:spacing w:after="200"/><w:jc w:val="center"/><w:rPr><w:rFonts w:cs="Khmer OS Siemreap"/></w:rPr></w:pPr>`
+    + `<w:r><w:rPr><w:rFonts w:eastAsia="Calibri" w:cs="Khmer OS Siemreap"/><w:cs/><w:lang w:bidi="km-KH"/></w:rPr>`
+    + `<w:t xml:space="preserve">${docxEscape(text)}</w:t></w:r></w:p>`;
+}
+async function exportPhotoDocx(){
+  const photos = state.photos || [];
+  if(!photos.length){ showToast('គ្មានរូបភាពសម្រាប់របាយការណ៍'); return; }
+  if(typeof JSZip === 'undefined'){ showToast('Library មិនទាន់ផ្ទុក'); return; }
+  showToast('កំពុងបង្កើត Word…');
+
+  const zip = new JSZip();
+  const media = zip.folder('word').folder('media');
+  const rels = [];
+  const cells = [];
+
+  for(let i = 0; i < photos.length; i++){
+    const ph = photos[i];
+    const dataUrl = ph.dataUrl || '';
+    const isPng = /^data:image\/png/.test(dataUrl);
+    const ext = isPng ? 'png' : 'jpeg';
+    const base64 = dataUrl.split(',')[1] || '';
+    const name = `image${i + 1}.${ext}`;
+    media.file(name, base64, { base64: true });
+    const rid = `rId${100 + i}`;
+    rels.push(`<Relationship Id="${rid}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/image" Target="media/${name}"/>`);
+
+    // keep the photo's own shape inside the template's picture box
+    const size = await imageSizeOf(dataUrl);
+    const scale = Math.min(DOCX_BOX_W / size.w, DOCX_BOX_H / size.h);
+    const cx = Math.max(1, Math.round(size.w * scale));
+    const cy = Math.max(1, Math.round(size.h * scale));
+
+    const picPara = `<w:p><w:pPr><w:spacing w:after="60"/><w:jc w:val="center"/></w:pPr>${docxPictureXml(rid, cx, cy, i + 1)}</w:p>`;
+    const caption = docxCaption(`រូបភាព ${toKhmerDigits(i + 1)} — គ.ម ${chainageKhmer(ph.distance)}`);
+    cells.push(docxCell(picPara + caption));
+  }
+
+  // 2 photos per row, 2 rows per table so each page holds 4
+  const tblPr = `<w:tblPr><w:tblW w:w="0" w:type="auto"/><w:tblLayout w:type="fixed"/>`
+    + `<w:tblCellMar><w:top w:w="0" w:type="dxa"/><w:left w:w="0" w:type="dxa"/><w:bottom w:w="0" w:type="dxa"/><w:right w:w="0" w:type="dxa"/></w:tblCellMar>`
+    + `<w:tblLook w:val="0000" w:firstRow="0" w:lastRow="0" w:firstColumn="0" w:lastColumn="0" w:noHBand="0" w:noVBand="0"/></w:tblPr>`
+    + `<w:tblGrid><w:gridCol w:w="4870"/><w:gridCol w:w="4870"/></w:tblGrid>`;
+  let body = '';
+  for(let i = 0; i < cells.length; i += 4){
+    const page = cells.slice(i, i + 4);
+    let rows = '';
+    for(let r = 0; r < page.length; r += 2){
+      rows += `<w:tr>${page[r]}${page[r + 1] || docxCell('<w:p/>')}</w:tr>`;
+    }
+    body += `<w:tbl>${tblPr}${rows}</w:tbl>`;
+    if(i + 4 < cells.length){
+      body += `<w:p><w:r><w:br w:type="page"/></w:r></w:p>`;
+    }
+  }
+
+  const title = `របាយការណ៍រូបភាពស្ថានភាព${roadLabel()}`;
+  const titleXml = `<w:p><w:pPr><w:spacing w:after="160"/><w:jc w:val="center"/></w:pPr>`
+    + `<w:r><w:rPr><w:rFonts w:eastAsia="Calibri" w:cs="Khmer OS Siemreap"/><w:b/><w:bCs/><w:sz w:val="24"/><w:szCs w:val="39"/><w:cs/><w:lang w:bidi="km-KH"/></w:rPr>`
+    + `<w:t xml:space="preserve">${docxEscape(title)}</w:t></w:r></w:p>`;
+  // A4 portrait, same margins as the template
+  const sectPr = `<w:sectPr><w:pgSz w:w="11906" w:h="16838"/>`
+    + `<w:pgMar w:top="1000" w:right="1083" w:bottom="1000" w:left="1083" w:header="720" w:footer="720" w:gutter="0"/></w:sectPr>`;
+
+  const documentXml = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>`
+    + `<w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"`
+    + ` xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"`
+    + ` xmlns:wp="http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing">`
+    + `<w:body>${titleXml}${body}${sectPr}</w:body></w:document>`;
+
+  zip.file('[Content_Types].xml', `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>`
+    + `<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">`
+    + `<Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>`
+    + `<Default Extension="xml" ContentType="application/xml"/>`
+    + `<Default Extension="jpeg" ContentType="image/jpeg"/>`
+    + `<Default Extension="jpg" ContentType="image/jpeg"/>`
+    + `<Default Extension="png" ContentType="image/png"/>`
+    + `<Override PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/>`
+    + `</Types>`);
+  zip.folder('_rels').file('.rels', `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>`
+    + `<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">`
+    + `<Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="word/document.xml"/>`
+    + `</Relationships>`);
+  zip.folder('word').file('document.xml', documentXml);
+  zip.folder('word').folder('_rels').file('document.xml.rels', `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>`
+    + `<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">${rels.join('')}</Relationships>`);
+
+  const blob = await zip.generateAsync({ type:'blob', mimeType:'application/vnd.openxmlformats-officedocument.wordprocessingml.document' });
+  const name = `${roadFileTag()}photo-report-${Date.now()}.docx`;
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = name;
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  setTimeout(()=> URL.revokeObjectURL(a.href), 1000);
+  showToast('បាននាំចេញ Word');
+  if(navigator.share && navigator.canShare){
+    const file = new File([blob], name, { type: blob.type });
+    if(navigator.canShare({ files:[file] })){
+      navigator.share({ files:[file], title:(roadLabel() ? roadLabel() + ' — ' : '') + 'របាយការណ៍រូបភាព' }).catch(()=>{});
+    }
+  }
+}
+els.exportDocxBtn.addEventListener('click', ()=>{
+  exportPhotoDocx().catch(err=>{ console.error(err); showToast('Word export failed'); });
+});
+
+/* ---------- KML export (Google Earth) ---------- */
+// Colours are KML aabbggrr (alpha, blue, green, red) — not the usual #rrggbb.
+const KML_STYLE = {
+  good:   { kml: 'ff00c46f', label: 'ល្អ (គ្មានបញ្ហា)' },
+  medium: { kml: 'ff00a8f5', label: 'មធ្យម (១-២ បញ្ហា)' },
+  bad:    { kml: 'ff2424e3', label: 'អាក្រក់ (៣+ បញ្ហា)' }
+};
+function xmlEscape(v){
+  return String(v == null ? '' : v)
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;').replace(/'/g, '&apos;');
+}
+// Travelled distance (metres from the start of the drive) for a chainage value.
+function traveledAt(chainage){
+  return (chainage - state.startChainage) * state.direction;
+}
+function pointAtTraveled(target){
+  const path = state.path || [];
+  if(!path.length) return null;
+  if(target <= path[0].cum) return path[0];
+  for(let i = 1; i < path.length; i++){
+    const a = path[i-1], b = path[i];
+    if(target <= b.cum){
+      const span = b.cum - a.cum;
+      const f = span > 0 ? (target - a.cum) / span : 0;
+      return { lat: a.lat + (b.lat - a.lat) * f, lon: a.lon + (b.lon - a.lon) * f };
+    }
+  }
+  return path[path.length - 1];
+}
+// GPS fixes between two chainages, with exact interpolated ends.
+function coordsBetween(fromChainage, toChainage){
+  const path = state.path || [];
+  if(!path.length) return [];
+  let t0 = traveledAt(fromChainage), t1 = traveledAt(toChainage);
+  if(t0 > t1){ const tmp = t0; t0 = t1; t1 = tmp; }
+  const out = [];
+  const first = pointAtTraveled(t0);
+  if(first) out.push(first);
+  path.forEach(p=>{ if(p.cum > t0 && p.cum < t1) out.push(p); });
+  const last = pointAtTraveled(t1);
+  if(last) out.push(last);
+  return out.filter((p, i, arr) => i === 0 || p.lat !== arr[i-1].lat || p.lon !== arr[i-1].lon);
+}
+function kmlCoords(list){
+  return list.map(p => `${p.lon.toFixed(7)},${p.lat.toFixed(7)},0`).join(' ');
+}
+function buildKml(){
+  const road = roadLabel() || 'Road inspection';
+  const { lo, hi } = journeyRange();
+  const segments = computeRouteSegments();
+  const L = [];
+  L.push('<?xml version="1.0" encoding="UTF-8"?>');
+  L.push('<kml xmlns="http://www.opengis.net/kml/2.2"><Document>');
+  L.push(`<name>${xmlEscape(road)} — ${formatChainage(lo)} ដល់ ${formatChainage(hi)}</name>`);
+  L.push(`<description>${xmlEscape('នាយកដ្ឋានអភិវឌ្ឍន៍ហេដ្ឋារចនាសម្ព័ន្ធផ្លូវជនបទ · ' + new Date().toLocaleString())}</description>`);
+  Object.entries(KML_STYLE).forEach(([cls, st])=>{
+    L.push(`<Style id="seg-${cls}"><LineStyle><color>${st.kml}</color><width>6</width></LineStyle></Style>`);
+  });
+  L.push('<Style id="markPin"><IconStyle><color>ff2424e3</color><Icon><href>http://maps.google.com/mapfiles/kml/shapes/placemark_circle.png</href></Icon></IconStyle></Style>');
+  L.push('<Style id="bridgePin"><IconStyle><color>ffe0a020</color><Icon><href>http://maps.google.com/mapfiles/kml/shapes/water.png</href></Icon></IconStyle></Style>');
+  L.push('<Style id="photoPin"><IconStyle><color>ff7d4a2e</color><Icon><href>http://maps.google.com/mapfiles/kml/shapes/camera.png</href></Icon></IconStyle></Style>');
+
+  // 1. Road condition, one line per segment
+  L.push(`<Folder><name>${xmlEscape('ស្ថានភាពផ្លូវ')}</name>`);
+  segments.forEach(sg=>{
+    const pts = coordsBetween(sg.start, sg.end);
+    if(pts.length < 2) return;
+    const st = KML_STYLE[sg.cls] || KML_STYLE.good;
+    L.push('<Placemark>');
+    L.push(`<name>${xmlEscape(`${formatChainage(sg.start)} – ${formatChainage(sg.end)} · ${st.label}`)}</name>`);
+    L.push(`<description>${xmlEscape(`${road}\nប្រវែង ${formatLength(sg.end - sg.start)}\nចំណុចខូចខាត ${sg.count}`)}</description>`);
+    L.push(`<styleUrl>#seg-${sg.cls}</styleUrl>`);
+    L.push(`<LineString><tessellate>1</tessellate><altitudeMode>clampToGround</altitudeMode><coordinates>${kmlCoords(pts)}</coordinates></LineString>`);
+    L.push('</Placemark>');
+  });
+  L.push('</Folder>');
+
+  // 2. Marks — a pin for single points, a line for start/stop stretches
+  L.push(`<Folder><name>${xmlEscape('ចំណុចខូចខាត')}</name>`);
+  state.points.forEach(p=>{
+    const where = p.endDistance != null ? formatRange(p) : formatChainage(p.distance);
+    const name = xmlEscape(`${p.label} · ${where}`);
+    const desc = xmlEscape(`${road}\n${p.side || ''}\n${p.note || ''}`.trim());
+    if(p.endDistance != null){
+      const pts = coordsBetween(p.distance, p.endDistance);
+      if(pts.length >= 2){
+        L.push(`<Placemark><name>${name}</name><description>${desc}</description>`);
+        L.push('<Style><LineStyle><color>ffff7d1c</color><width>4</width></LineStyle></Style>');
+        L.push(`<LineString><tessellate>1</tessellate><altitudeMode>clampToGround</altitudeMode><coordinates>${kmlCoords(pts)}</coordinates></LineString></Placemark>`);
+        return;
+      }
+    }
+    const at = (p.lat != null && p.lon != null) ? { lat: p.lat, lon: p.lon } : pointAtTraveled(traveledAt(p.distance));
+    if(!at) return;
+    L.push(`<Placemark><name>${name}</name><description>${desc}</description><styleUrl>#markPin</styleUrl>`);
+    L.push(`<Point><coordinates>${kmlCoords([at])}</coordinates></Point></Placemark>`);
+  });
+  L.push('</Folder>');
+
+  // 3. Bridges
+  if((state.bridges || []).length){
+    L.push(`<Folder><name>${xmlEscape('ស្ពាន')}</name>`);
+    state.bridges.forEach(br=>{
+      const at = (br.lat != null && br.lon != null) ? { lat: br.lat, lon: br.lon } : pointAtTraveled(traveledAt(br.distance));
+      if(!at) return;
+      L.push(`<Placemark><name>${xmlEscape((br.name || 'ស្ពាន') + ' · ' + formatChainage(br.distance))}</name>`);
+      L.push(`<styleUrl>#bridgePin</styleUrl><Point><coordinates>${kmlCoords([at])}</coordinates></Point></Placemark>`);
+    });
+    L.push('</Folder>');
+  }
+
+  // 4. Photo locations (the images themselves stay in the photo ZIP)
+  if((state.photos || []).length){
+    L.push(`<Folder><name>${xmlEscape('ទីតាំងរូបភាព')}</name>`);
+    state.photos.forEach((ph, i)=>{
+      const at = (ph.lat != null && ph.lon != null) ? { lat: ph.lat, lon: ph.lon } : pointAtTraveled(traveledAt(ph.distance));
+      if(!at) return;
+      L.push(`<Placemark><name>${xmlEscape(`រូបភាព ${i+1} · ${formatChainage(ph.distance)}`)}</name>`);
+      L.push(`<styleUrl>#photoPin</styleUrl><Point><coordinates>${kmlCoords([at])}</coordinates></Point></Placemark>`);
+    });
+    L.push('</Folder>');
+  }
+
+  L.push('</Document></kml>');
+  return L.join('\n');
+}
+els.exportKmlBtn.addEventListener('click', ()=>{
+  if(!(state.path || []).length){
+    showToast('គ្មានទិន្នន័យ GPS សម្រាប់ KML');
+    return;
+  }
+  const blob = new Blob([buildKml()], {type:'application/vnd.google-earth.kml+xml'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `${roadFileTag()}road-inspection-${Date.now()}.kml`;
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  setTimeout(()=> URL.revokeObjectURL(a.href), 1000);
+  showToast('បាននាំចេញ KML');
+  if(navigator.share && navigator.canShare){
+    const file = new File([blob], a.download, {type:'application/vnd.google-earth.kml+xml'});
+    if(navigator.canShare({files:[file]})){
+      navigator.share({files:[file], title:(roadLabel() ? roadLabel() + ' — ' : '') + 'នាយកដ្ឋានអភិវឌ្ឍន៍ហេដ្ឋារចនាសម្ព័ន្ធផ្លូវជនបទ — KML'}).catch(()=>{});
+    }
+  }
+});
+
+els.exportBtn.addEventListener('click', ()=>{
+  // RFC 4180 compliant CSV: wrap every field in double-quotes,
+  // escape internal double-quotes by doubling them.
+  function csvField(v){
+    const s = (v == null ? '' : String(v)).replace(/"/g, '""');
+    return `"${s}"`;
+  }
+  // CRLF line endings + a UTF-8 BOM: this is what Excel needs to read Khmer correctly
+  function csvRow(arr){ return arr.map(csvField).join(',') + '\r\n'; }
+
+  let csv = csvRow(['ឈ្មោះផ្លូវ','គីឡូម៉ែត្រ','ចម្ងាយ (m)','ដល់','ប្រវែង (m)','ទិស','ប្រភេទ','កំណត់សម្គាល់','X','Y','ម៉ោង']);
+
+  const defectRows = state.points.map(p => ({
+    distance: p.distance, endDistance: p.endDistance, side: p.side || '', type: p.label || p.type || '', note: p.note || '',
+    lat: p.lat, lon: p.lon, timestamp: p.timestamp
+  }));
+  const photoRows = state.photos.map(p => ({
+    distance: p.distance, side: '-', type: 'រូបភាព', note: 'សូមមើលឯកសាររូបភាព',
+    lat: p.lat, lon: p.lon, timestamp: p.timestamp
+  }));
+  const bridgeRows = state.bridges.map(b => ({
+    distance: b.distance, side: '-', type: 'ស្ពាន', note: b.name || '',
+    lat: b.lat, lon: b.lon, timestamp: b.timestamp
+  }));
+
+  [...defectRows, ...photoRows, ...bridgeRows]
+    .sort((a, b) => a.distance - b.distance)
+    .forEach(r => {
+      csv += csvRow([
+        roadLabel(),
+        formatChainage(r.distance),
+        r.distance.toFixed(1),
+        r.endDistance != null ? formatChainage(r.endDistance) : '',
+        r.endDistance != null ? Math.round(r.endDistance - r.distance) : '',
+        r.side,
+        r.type,
+        r.note,
+        r.lon ?? '',
+        r.lat ?? '',
+        r.timestamp
+      ]);
+    });
+
+  const blob = new Blob(['\uFEFF' + csv], {type:'text/csv;charset=utf-8'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `${roadFileTag()}road-inspection-${Date.now()}.csv`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  setTimeout(()=> URL.revokeObjectURL(url), 1000);
+
+  // Also try native share sheet if available (nicer on iOS)
+  if(navigator.canShare && navigator.share){
+    const file = new File([blob], a.download, {type:'text/csv;charset=utf-8'});
+    if(navigator.canShare({files:[file]})){
+      navigator.share({files:[file], title:(roadLabel() ? roadLabel() + ' — ' : '') + 'នាយកដ្ឋានអភិវឌ្ឍន៍ហេដ្ឋារចនាសម្ព័ន្ធផ្លូវជនបទ — Report'}).catch(()=>{});
+    }
+  }
+});
+
+/* ---------- PDF export ---------- */
+els.exportPdfBtn.addEventListener('click', async ()=>{
+  if(typeof window.jspdf === 'undefined'){
+    showToast('PDF export needs an internet connection');
+    return;
+  }
+  els.exportPdfBtn.disabled = true;
+  els.exportPdfBtn.textContent = 'Building…';
+  try{
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF({ unit: 'pt', format: 'a4', compress: true });
+    const pageW = doc.internal.pageSize.getWidth();
+    const pageH = doc.internal.pageSize.getHeight();
+    const margin = 42;
+    let y = margin;
+
+    pdfText(doc, 'ក្រសួងអភិវឌ្ឍន៍ជនបទ', margin, y, { size: 12, bold: true, maxW: pageW - margin * 2 });
+    y += 16;
+    pdfText(doc, 'នាយកដ្ឋានអភិវឌ្ឍន៍ហេដ្ឋារចនាសម្ព័ន្ធផ្លូវជនបទ', margin, y, { size: 15, bold: true, maxW: pageW - margin * 2 });
+    y += 20;
+    pdfText(doc, roadLabel() ? `របាយការណ៍ត្រួតពិនិត្យ — ${roadLabel()}` : 'របាយការណ៍ត្រួតពិនិត្យ', margin, y, { size: 12, maxW: pageW - margin * 2 });
+    y += 16;
+    doc.setFontSize(9);
+    doc.setTextColor(120);
+    doc.text(`Generated ${new Date().toLocaleString()}`, margin, y);
+    doc.setTextColor(20);
+    y += 22;
+
+    // --- Summary stats ---
+    const stats = [
+      ['ឈ្មោះផ្លូវ', roadLabel() || '—'],
+      ['ចាប់ពី', formatChainage(state.startChainage)],
+      ['ដល់', formatChainage(chainageAt(state.totalDistance))],
+      ['ទិសដៅ', state.direction === -1 ? 'ទិសបញ្ច្រាស (ចុង \u2192 ដើម)' : 'ទិសផ្ទាល់ (ដើម \u2192 ចុង)'],
+      ['ចម្ងាយសរុប', formatChainage(state.totalDistance)],
+      ['រយៈពេល', formatDuration((state.endTime || Date.now()) - state.startTime)],
+      ['ចំណុចសរុប', String(state.points.length)],
+      ['រូបភាពសរុប', String(state.photos.length)]
+    ];
+    stats.forEach(([k, v]) => {
+      pdfText(doc, k + ':', margin, y, { size: 10.5, bold: true, maxW: 100 });
+      pdfText(doc, v, margin + 110, y, { size: 10.5, maxW: pageW - margin - (margin + 110) });
+      y += 15;
+    });
+    y += 12;
+
+    // --- Horizontal bar chart ---
+    const chart = buildBarChartImage(getTypeStats(), { dark: false });
+    const imgW = pageW - margin * 2;
+    const imgH = imgW * (chart.height / chart.width);
+    doc.addImage(chart.dataUrl, 'PNG', margin, y, imgW, imgH);
+    y += imgH + 24;
+
+    // --- Marks table ---
+    const sortedPoints = [...state.points].sort((a, b) => a.distance - b.distance);
+    if (sortedPoints.length > 0) {
+      pdfText(doc, 'បញ្ជីចំណុចទាំងអស់ (តាមលំដាប់)', margin, y, { size: 11, bold: true, maxW: pageW - margin * 2 });
+      y += 14;
+
+      const cols = [
+        { label: 'គីឡូម៉ែត្រ', x: margin, w: 62 },
+        { label: 'ទិស', x: margin + 66, w: 44 },
+        { label: 'ប្រភេទ', x: margin + 114, w: 104 },
+        { label: 'កំណត់សម្គាល់', x: margin + 222, w: pageW - margin - (margin + 222) }
+      ];
+      const drawHeader = () => {
+        cols.forEach(c => pdfText(doc, c.label, c.x, y, { size: 9, bold: true, maxW: c.w }));
+        y += 6;
+        doc.setDrawColor(200);
+        doc.line(margin, y, pageW - margin, y);
+        y += 10;
+      };
+      drawHeader();
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(9);
+
+      sortedPoints.forEach(p => {
+        if (y > pageH - margin - 20) {
+          doc.addPage();
+          y = margin;
+          drawHeader();
+          doc.setFont('helvetica', 'normal');
+          doc.setFontSize(9);
+        }
+        pdfText(doc, formatChainage(p.distance), cols[0].x, y, { size: 9, maxW: cols[0].w });
+        pdfText(doc, p.side || '', cols[1].x, y, { size: 9, maxW: cols[1].w });
+        pdfText(doc, p.label, cols[2].x, y, { size: 9, maxW: cols[2].w });
+        const noteText = p.endDistance != null ? `${formatRange(p)} (${formatLength(p.endDistance - p.distance)})${p.note ? ' ' + p.note : ''}` : (p.note || '—');
+        if(KHMER_RE.test(noteText)){
+          pdfText(doc, noteText, cols[3].x, y, { size: 9, maxW: cols[3].w });
+          y += 14;
+        } else {
+          doc.setFont('helvetica', 'normal');
+          doc.setFontSize(9);
+          const noteLines = doc.splitTextToSize(noteText, cols[3].w);
+          doc.text(noteLines, cols[3].x, y);
+          y += Math.max(13, noteLines.length * 11);
+        }
+      });
+      y += 10;
+    }
+
+    // --- Photos note ---
+    if (state.photos.length > 0) {
+      if (y > pageH - margin - 30) { doc.addPage(); y = margin; }
+      pdfText(doc, `រូបភាពសរុប ${state.photos.length} — សូមមើលរបាយការណ៍រូបភាពនៅទំព័រចុងក្រោយ`, margin, y, { size: 9.5, maxW: pageW - margin * 2 });
+      y += 18;
+    }
+
+    // --- Route condition strip chart (own page: wants full page width) ---
+    doc.addPage();
+    y = margin;
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(13);
+    doc.setTextColor(20);
+    pdfText(doc, 'ស្ថានភាពផ្លូវតាមចម្ងាយ', margin, y, { size: 13, bold: true, maxW: pageW - margin * 2 });
+    y += 18;
+
+    const routeSegments = computeRouteSegments();
+    const condTotals = { good: 0, medium: 0, bad: 0 };
+    routeSegments.forEach(s => { condTotals[s.cls] += (s.end - s.start); });
+    const totalM = Math.max(state.totalDistance, 1);
+    pdfText(doc,
+      `ល្អ ${(condTotals.good / totalM * 100).toFixed(0)}%  \u2022  មធ្យម ${(condTotals.medium / totalM * 100).toFixed(0)}%  \u2022  អាក្រក់ ${(condTotals.bad / totalM * 100).toFixed(0)}%  \u2022  ស្ពាន ${state.bridges.length}`,
+      margin, y, { size: 10, maxW: pageW - margin * 2 }
+    );
+    y += 18;
+
+    const pageContentW = pageW - margin * 2;
+    const targetRowLengthM = Math.max(1000, Math.ceil(totalM / 4 / 100) * 100); // aim for ~4 rows per page
+    const routeChart = buildRouteStripImage(routeSegments, state.bridges, journeyRange().lo, journeyRange().hi, {
+      rowLengthM: targetRowLengthM,
+      pxPerMeter: pageContentW / targetRowLengthM
+    });
+    const routeImgH = pageContentW * (routeChart.height / routeChart.width);
+    if (routeImgH <= pageH - y - margin) {
+      doc.addImage(routeChart.dataUrl, 'PNG', margin, y, pageContentW, routeImgH);
+    } else {
+      // Tall chart (many rows) — scale to fit the remaining page height instead.
+      const scaledW = (pageH - y - margin) * (routeChart.width / routeChart.height);
+      doc.addImage(routeChart.dataUrl, 'PNG', margin, y, Math.min(pageContentW, scaledW), Math.min(routeImgH, pageH - y - margin));
+    }
+
+    // --- Photo report pages: same layout as the Word report (2 x 2 per page) ---
+    if (state.photos.length > 0) {
+      const boxW = (pageW - margin * 2 - 18) / 2;        // two columns
+      const boxH = boxW * (4.1667 / 3.125);              // template picture shape
+      const capH = 16;
+      const headTxt = buildTextImage(`របាយការណ៍រូបភាពស្ថានភាព${roadLabel()}`, { fontPx: 34, bold: true });
+
+      for (let i = 0; i < state.photos.length; i += 4) {
+        doc.addPage();
+        y = margin;
+        const headW = Math.min(pageW - margin * 2, headTxt.width * 0.5);
+        doc.addImage(headTxt.dataUrl, 'PNG', (pageW - headW) / 2, y, headW, headW * (headTxt.height / headTxt.width));
+        y += headW * (headTxt.height / headTxt.width) + 14;
+
+        const pageStartY = y;
+        for (let k = 0; k < 4 && i + k < state.photos.length; k++) {
+          const ph = state.photos[i + k];
+          const col = k % 2, row = Math.floor(k / 2);
+          const cellX = margin + col * (boxW + 18);
+          const cellY = pageStartY + row * (boxH + capH + 16);
+          const size = await imageSizeOf(ph.dataUrl);
+          const scale = Math.min(boxW / size.w, boxH / size.h);
+          const drawW = size.w * scale, drawH = size.h * scale;
+          doc.addImage(ph.dataUrl, 'JPEG', cellX + (boxW - drawW) / 2, cellY + (boxH - drawH) / 2, drawW, drawH);
+          const cap = buildTextImage(`រូបភាព ${toKhmerDigits(i + k + 1)} — គ.ម ${chainageKhmer(ph.distance)}`, { fontPx: 26 });
+          const capW = Math.min(boxW, cap.width * 0.5);
+          doc.addImage(cap.dataUrl, 'PNG', cellX + (boxW - capW) / 2, cellY + boxH + 4, capW, capW * (cap.height / cap.width));
+        }
+      }
+    }
+
+    const fileName = `${roadFileTag()}road-inspection-report-${Date.now()}.pdf`;
+    doc.save(fileName);
+
+    if (navigator.canShare && navigator.share) {
+      const blob = doc.output('blob');
+      const file = new File([blob], fileName, { type: 'application/pdf' });
+      if (navigator.canShare({ files: [file] })) {
+        navigator.share({ files: [file], title: (roadLabel() ? roadLabel() + ' — ' : '') + 'នាយកដ្ឋានអភិវឌ្ឍន៍ហេដ្ឋារចនាសម្ព័ន្ធផ្លូវជនបទ — Report' }).catch(() => {});
+      }
+    }
+  } catch (err) {
+    console.error(err);
+    showToast('Could not build the PDF');
+  } finally {
+    els.exportPdfBtn.disabled = false;
+    els.exportPdfBtn.textContent = 'Export PDF';
+  }
+});
+
+/* ---------- PowerPoint export (Route Condition report) ---------- */
+els.exportPptBtn.addEventListener('click', async ()=>{
+  if(typeof window.PptxGenJS === 'undefined'){
+    showToast('PowerPoint export needs an internet connection');
+    return;
+  }
+  els.exportPptBtn.disabled = true;
+  els.exportPptBtn.textContent = 'Building…';
+  try{
+    const INK = '1C1E22', MUTED2 = '6B7280', YELLOW2 = 'F5C518', PAPER = 'FFFFFF', LINE2 = 'DDD9CF', PANEL = 'F6F4EF';
+    const pres = new window.PptxGenJS();
+    pres.layout = 'LAYOUT_16x9';
+    pres.author = 'DPWT Kandal';
+    pres.title = 'Route Condition Evaluation \u2014 នាយកដ្ឋានអភិវឌ្ឍន៍ហេដ្ឋារចនាសម្ព័ន្ធផ្លូវជនបទ';
+
+    function kicker(s, text, x, y){
+      s.addText(text.toUpperCase(), { x, y, w: 6, h: 0.3, fontSize: 12, bold: true, color: YELLOW2, charSpacing: 1, fontFace: 'Calibri', margin: 0 });
+    }
+
+    const routeSegmentsExport = computeRouteSegments();
+    const condTotals = { good: 0, medium: 0, bad: 0 };
+    routeSegmentsExport.forEach(seg => { condTotals[seg.cls] += (seg.end - seg.start); });
+    const totalM = Math.max(state.totalDistance, 1);
+
+    // --- Slide 1: title + methodology ---
+    let s1 = pres.addSlide();
+    s1.background = { color: PAPER };
+    kicker(s1, 'Inspection Report', 0.6, 0.5);
+    s1.addText('Route Condition Evaluation', { x: 0.55, y: 0.85, w: 9, h: 0.65, fontSize: 30, bold: true, color: INK, fontFace: 'Calibri', margin: 0 });
+    s1.addText(`${roadLabel() ? roadLabel() + ' \u2014 ' : ''}នាយកដ្ឋានអភិវឌ្ឍន៍ហេដ្ឋារចនាសម្ព័ន្ធផ្លូវជនបទ \u2014 គីឡូម៉ែត្រ ${formatChainage(journeyRange().lo)} ដល់ ${formatChainage(journeyRange().hi)}`, {
+      x: 0.6, y: 1.48, w: 9, h: 0.4, fontSize: 14, color: MUTED2, fontFace: 'Calibri', margin: 0,
+    });
+
+    const classRows = [
+      ['Good', 'FFFFFF', '0 qualifying defects in a 200m window', INK],
+      ['Medium', 'FAB469', '1-2 qualifying defects in a 200m window', INK],
+      ['Bad', 'E31E24', '3+ qualifying defects in a 200m window', 'FFFFFF'],
+    ];
+    let ry = 2.1;
+    classRows.forEach(([label, fill, desc, textColor]) => {
+      s1.addShape(pres.shapes.ROUNDED_RECTANGLE, { x: 0.6, y: ry, w: 1.3, h: 0.42, rectRadius: 0.06, fill: { color: fill }, line: { color: LINE2, width: 1 } });
+      s1.addText(label, { x: 0.6, y: ry, w: 1.3, h: 0.42, fontSize: 12.5, bold: true, color: textColor, align: 'center', valign: 'middle', fontFace: 'Calibri', margin: 0 });
+      s1.addText(desc, { x: 2.05, y: ry, w: 7.3, h: 0.42, fontSize: 12.5, color: INK, valign: 'middle', fontFace: 'Calibri', margin: 0 });
+      ry += 0.52;
+    });
+    s1.addText('Qualifying defect types: Pothole, Big Damage, Shoulder. Consecutive 200m windows of the same class are merged into one segment on the chart.', {
+      x: 0.6, y: ry + 0.08, w: 8.8, h: 0.5, fontSize: 11, italic: true, color: MUTED2, fontFace: 'Calibri', margin: 0,
+    });
+
+    // --- Slide 2: the chart ---
+    let s2 = pres.addSlide();
+    s2.background = { color: PAPER };
+    kicker(s2, 'Linear Diagram', 0.5, 0.32);
+    s2.addText(`${formatChainage(state.startChainage)} \u2192 ${formatChainage(chainageAt(state.totalDistance))}`, {
+      x: 0.5, y: 0.6, w: 6, h: 0.4, fontSize: 16, bold: true, color: INK, fontFace: 'Calibri', margin: 0,
+    });
+    const targetRowLengthM = Math.max(1000, Math.ceil(totalM / 4 / 100) * 100); // aim for ~4 rows
+    const chartForPpt = buildRouteStripImage(routeSegmentsExport, state.bridges, journeyRange().lo, journeyRange().hi, {
+      rowLengthM: targetRowLengthM,
+      pxPerMeter: 1200 / targetRowLengthM,
+    });
+    const arPpt = chartForPpt.width / chartForPpt.height;
+    const wPpt = 9.3, hPpt = Math.min(wPpt / arPpt, 4.2);
+    s2.addImage({ data: chartForPpt.dataUrl, x: (10 - wPpt) / 2, y: 1.15, w: wPpt, h: hPpt });
+
+    // --- Slide 3: summary stats ---
+    let s3 = pres.addSlide();
+    s3.background = { color: PAPER };
+    kicker(s3, 'Summary', 0.6, 0.45);
+    s3.addText('Route Condition, By the Numbers', { x: 0.55, y: 0.78, w: 9, h: 0.6, fontSize: 26, bold: true, color: INK, fontFace: 'Calibri', margin: 0 });
+
+    const statCards = [
+      { big: `${(condTotals.good / totalM * 100).toFixed(0)}%`, label: 'Good condition', sub: `${Math.round(condTotals.good)}m of ${Math.round(totalM)}m`, fill: PANEL, color: '1C8F3B' },
+      { big: `${(condTotals.medium / totalM * 100).toFixed(0)}%`, label: 'Medium condition', sub: `${Math.round(condTotals.medium)}m of ${Math.round(totalM)}m`, fill: 'FFF1E0', color: 'C97A1F' },
+      { big: `${(condTotals.bad / totalM * 100).toFixed(0)}%`, label: 'Bad condition', sub: `${Math.round(condTotals.bad)}m of ${Math.round(totalM)}m`, fill: 'FDE9E9', color: 'E31E24' },
+    ];
+    const cw = 2.75, gap = 0.3, startX = (10 - (cw * 3 + gap * 2)) / 2, statY = 1.5;
+    statCards.forEach((st, i) => {
+      const x = startX + i * (cw + gap);
+      s3.addShape(pres.shapes.ROUNDED_RECTANGLE, { x, y: statY, w: cw, h: 1.65, rectRadius: 0.1, fill: { color: st.fill }, line: { color: LINE2, width: 1 } });
+      s3.addText(st.big, { x: x + 0.1, y: statY + 0.15, w: cw - 0.2, h: 0.65, fontSize: 30, bold: true, color: st.color, align: 'center', fontFace: 'Calibri', margin: 0 });
+      s3.addText(st.label, { x: x + 0.1, y: statY + 0.85, w: cw - 0.2, h: 0.35, fontSize: 12.5, bold: true, color: INK, align: 'center', fontFace: 'Calibri', margin: 0 });
+      s3.addText(st.sub, { x: x + 0.1, y: statY + 1.22, w: cw - 0.2, h: 0.35, fontSize: 10, color: MUTED2, align: 'center', fontFace: 'Calibri', margin: 0 });
+    });
+
+    const tableTop = 3.25, tableY = 3.58, rowH = 0.26;
+    s3.addText('Defects contributing to the score', { x: 0.6, y: tableTop, w: 6, h: 0.32, fontSize: 13.5, bold: true, color: INK, fontFace: 'Calibri', margin: 0 });
+    const defectCounts = TYPES.filter(t => SCORING_TYPES.has(t.id)).map(t => [t.label, state.points.filter(p => p.type === t.id).length]);
+    const totalQualifying = defectCounts.reduce((sum, [, c]) => sum + c, 0);
+    const defectRows = [['Type', 'Count'], ...defectCounts.map(([k, v]) => [k, String(v)]), ['Total qualifying defects', String(totalQualifying)]];
+    const defectTableRows = defectRows.map((r, i) => {
+      if (i === 0) return r.map(c => ({ text: c, options: { bold: true, color: 'FFFFFF', fill: { color: INK }, fontSize: 11, fontFace: 'Calibri' } }));
+      const last = i === defectRows.length - 1;
+      return r.map((c, ci) => ({ text: c, options: { color: INK, fill: { color: last ? 'F0EEE8' : PAPER }, fontSize: 11, fontFace: 'Calibri', bold: last || ci === 0 } }));
+    });
+    s3.addTable(defectTableRows, { x: 0.6, y: tableY, w: 4.2, colW: [3.0, 1.2], border: { pt: 0.5, color: LINE2 }, autoPage: false, rowH, valign: 'middle' });
+
+    s3.addText('Structures along the route', { x: 5.2, y: tableTop, w: 4.2, h: 0.32, fontSize: 13.5, bold: true, color: INK, fontFace: 'Calibri', margin: 0 });
+    const sortedBridgesExport = [...state.bridges].sort((a, b) => a.distance - b.distance);
+    const maxBridgeRows = 5;
+    const shownBridges = sortedBridgesExport.slice(0, maxBridgeRows);
+    if(shownBridges.length > 0){
+      const bridgeRows = [['គីឡូម៉ែត្រ', 'Name'], ...shownBridges.map(b => [formatChainage(b.distance), b.name])];
+      const bridgeTableRows = bridgeRows.map((r, i) => {
+        if (i === 0) return r.map(c => ({ text: c, options: { bold: true, color: 'FFFFFF', fill: { color: INK }, fontSize: 11, fontFace: 'Calibri' } }));
+        return r.map(c => ({ text: c, options: { color: INK, fill: { color: PAPER }, fontSize: 11, fontFace: 'Calibri' } }));
+      });
+      s3.addTable(bridgeTableRows, { x: 5.2, y: tableY, w: 4.2, colW: [1.6, 2.6], border: { pt: 0.5, color: LINE2 }, autoPage: false, rowH, valign: 'middle' });
+      if(sortedBridgesExport.length > maxBridgeRows){
+        s3.addText(`+ ${sortedBridgesExport.length - maxBridgeRows} more \u2014 see CSV export for the full list`, {
+          x: 5.2, y: tableY + (maxBridgeRows + 1) * rowH + 0.06, w: 4.2, h: 0.3, fontSize: 9, italic: true, color: MUTED2, fontFace: 'Calibri', margin: 0,
+        });
+      }
+    } else {
+      s3.addText('No bridges marked on this journey.', { x: 5.2, y: tableY, w: 4.2, h: 0.4, fontSize: 11, italic: true, color: MUTED2, fontFace: 'Calibri', margin: 0 });
+    }
+
+    await pres.writeFile({ fileName: `${roadFileTag()}road-inspection-route-condition-${Date.now()}.pptx` });
+  } catch(err){
+    console.error(err);
+    showToast('Could not build the PowerPoint');
+  } finally {
+    els.exportPptBtn.disabled = false;
+    els.exportPptBtn.textContent = 'Export PPTX';
+  }
+});
+
+/* ---------- Photo export (zip) ---------- */
+els.exportPhotosBtn.addEventListener('click', async ()=>{
+  if(state.photos.length === 0){
+    showToast('No photos to export');
+    return;
+  }
+  if(typeof JSZip === 'undefined'){
+    showToast('Photo export needs an internet connection');
+    return;
+  }
+  els.exportPhotosBtn.disabled = true;
+  els.exportPhotosBtn.textContent = 'Zipping…';
+  try{
+    const zip = new JSZip();
+    [...state.photos].sort((a,b)=>a.distance-b.distance).forEach((p, i)=>{
+      const base64 = p.dataUrl.split(',')[1];
+      const name = `photo_${String(i+1).padStart(2,'0')}_${formatChainage(p.distance).replace('+','-')}.jpg`;
+      zip.file(name, base64, {base64:true});
+    });
+    const blob = await zip.generateAsync({type:'blob'});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${roadFileTag()}road-inspection-photos-${Date.now()}.zip`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setTimeout(()=> URL.revokeObjectURL(url), 1000);
+
+    if(navigator.canShare && navigator.share){
+      const file = new File([blob], a.download, {type:'application/zip'});
+      if(navigator.canShare({files:[file]})){
+        navigator.share({files:[file], title:(roadLabel() ? roadLabel() + ' — ' : '') + 'នាយកដ្ឋានអភិវឌ្ឍន៍ហេដ្ឋារចនាសម្ព័ន្ធផ្លូវជនបទ — Photos'}).catch(()=>{});
+      }
+    }
+  } catch(err){
+    showToast('Could not export photos');
+  } finally {
+    els.exportPhotosBtn.disabled = false;
+    els.exportPhotosBtn.textContent = 'Export Photos';
+  }
+});
+
+/* ---------- Persistence (survive reloads / backgrounding) ---------- */
+function persist(){
+  try{ localStorage.setItem('roadInspectionState', JSON.stringify(state)); }catch(e){}
+}
+function restore(){
+  try{
+    const saved = JSON.parse(localStorage.getItem('roadInspectionState'));
+    if(saved && saved.active){
+      state = saved;
+      renderDistance(); updateMarkCount(); setActiveUI(true);
+      startTracking();
+    }
+  }catch(e){}
+}
+
+/* ---------- Init ---------- */
+buildLanes();
+renderDistance();
+updateMarkCount();
+setActiveUI(false);
+restore();
+
+if(!window.isSecureContext){
+  els.gpsBanner.textContent = 'This page must be served over HTTPS for live GPS tracking to work.';
+  els.gpsBanner.classList.add('show');
+}
+
+/* Real usable height, measured live — iOS standalone + safe areas make CSS units unreliable */
+function setAppHeight(){
+  // iOS reports several different "heights"; the largest is the real screen in a
+  // Home Screen app, and the footer pads itself, so overshooting is safe.
+  const vv = window.visualViewport;
+  const h = Math.max(
+    window.innerHeight || 0,
+    document.documentElement.clientHeight || 0,
+    vv ? vv.height + (vv.offsetTop || 0) : 0,
+    window.screen && window.matchMedia('(display-mode: standalone)').matches ? (window.screen.height || 0) : 0
+  );
+  if(h > 0) document.documentElement.style.setProperty('--app-h', h + 'px');
+}
+setAppHeight();
+window.addEventListener('resize', setAppHeight);
+window.addEventListener('orientationchange', ()=> setTimeout(setAppHeight, 200));
+if(window.visualViewport) window.visualViewport.addEventListener('resize', setAppHeight);
+window.addEventListener('pageshow', setAppHeight);
+
+// Inside the Android app the assets are already local, so no service worker is used
+if('serviceWorker' in navigator && location.hostname !== 'appassets.androidplatform.net'){
+  navigator.serviceWorker.register('sw.js').catch(()=>{});
+}
+</script>
+</body>
+</html>

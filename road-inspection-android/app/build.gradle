@@ -1,0 +1,55 @@
+plugins {
+    id 'com.android.application'
+}
+
+android {
+    namespace 'kh.gov.mrd.roadinspection'
+    compileSdk 35
+
+    defaultConfig {
+        applicationId "kh.gov.mrd.roadinspection"
+        minSdk 23
+        targetSdk 34
+        versionCode 46
+        versionName "46"
+    }
+
+    // The web app lives in /web at the repo root: update those files and rebuild.
+    sourceSets {
+        main {
+            assets.srcDirs += ['../web']
+        }
+    }
+
+    signingConfigs {
+        release {
+            // CI can override these with secrets; otherwise the key committed to the repo
+            // is used, so every build can be installed over the previous one.
+            storeFile file(System.getenv("RI_KEYSTORE") ?: "../keystore/road-inspection.jks")
+            storePassword System.getenv("RI_KEYSTORE_PASSWORD") ?: "roadinspection"
+            keyAlias System.getenv("RI_KEY_ALIAS") ?: "roadinspection"
+            keyPassword System.getenv("RI_KEY_PASSWORD") ?: "roadinspection"
+        }
+    }
+
+    buildTypes {
+        release {
+            signingConfig signingConfigs.release
+            minifyEnabled false
+            shrinkResources false
+        }
+        debug {
+            signingConfig signingConfigs.release
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+}
+
+dependencies {
+    implementation 'androidx.webkit:webkit:1.12.1'
+    implementation 'androidx.core:core:1.13.1'
+}

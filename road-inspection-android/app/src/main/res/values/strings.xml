@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">ស្ថានភាពផ្លូវ</string>
+    <string name="choose_photo">ជ្រើសរើសរូបភាព</string>
+    <string name="no_camera">រកមិនឃើញកាមេរ៉ា</string>
+    <string name="need_location">សូមអនុញ្ញាតទីតាំង ដើម្បីវាស់ចម្ងាយផ្លូវ</string>
+    <string name="export_saved">បានរក្សាទុក %1$s</string>
+    <string name="export_failed">នាំចេញមិនបានសម្រេច</string>
+    <string name="share_export">ចែករំលែកឯកសារ</string>
+    <string name="press_again">ចុចម្តងទៀតដើម្បីចាកចេញ</string>
+</resources>
